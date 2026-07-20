@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// =========================
+// ENUMS
+// =========================
+
+enum Role {
+  admin
+  manager
+  staff
+}
+
+// =========================
+// USER (Authentication)
+// =========================
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role
+  createdAt DateTime @default(now())
+}
+
+
+// =========================
+// EMPLOYEES
+// =========================
+
+model Employee {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String?
+  phone     String?
+  position  String?
+  salary    Float?
+  status    String   @default("Active")
+  createdAt DateTime @default(now())
+}
+
+// =========================
+// CUSTOMERS
+// =========================
+
+model Customer {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String?
+  phone     String?
+  createdAt DateTime @default(now())
+
+  sales     Sale[]
+}
+
+// =========================
+// SUPPLIERS
+// =========================
+
+model Supplier {
+  id        Int      @id @default(autoincrement())
+  name      String
+  contact   String?
+  phone     String?
+  createdAt DateTime @default(now())
+
+  products  Product[]
+  purchases Purchase[]
+}
+
+// =========================
+// PRODUCTS
+// =========================
+
+model Product {
+  id         Int        @id @default(autoincrement())
+  name       String
+  price      Float
+  supplierId Int
+  createdAt  DateTime   @default(now())
+
+  supplier   Supplier   @relation(fields: [supplierId], references: [id])
+  inventory  Inventory?
+  purchases  Purchase[]
+  sales      Sale[]
+}
+
+// =========================
+// INVENTORY
+// =========================
+
+model Inventory {
+  id        Int      @id @default(autoincrement())
+  productId Int      @unique
+  quantity  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  product   Product  @relation(fields: [productId], references: [id])
+}
+
+// =========================
+// PURCHASES
+// =========================
+
+model Purchase {
+  id          Int      @id @default(autoincrement())
+  productId   Int
+  supplierId  Int
+  quantity    Int
+  costPerUnit Float
+  createdAt   DateTime @default(now())
+
+  product     Product  @relation(fields: [productId], references: [id])
+  supplier    Supplier @relation(fields: [supplierId], references: [id])
+}
+
+// =========================
+// SALES
+// =========================
+
+model Sale {
+  id           Int      @id @default(autoincrement())
+  productId    Int
+  customerId   Int
+  quantity     Int
+  pricePerUnit Float
+  createdAt    DateTime @default(now())
+
+  product      Product  @relation(fields: [productId], references: [id])
+  customer     Customer @relation(fields: [customerId], references: [id])
+}

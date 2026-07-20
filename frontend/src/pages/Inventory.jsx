@@ -1,0 +1,650 @@
+import { useEffect, useState } from "react";
+import axios from "axios";
+import Modal from "../components/Modal";
+import "../styles/ModulePage.css";
+
+const INVENTORY_URL = "http://127.0.0.1:5000/api/inventory";
+const PRODUCTS_URL = "http://127.0.0.1:5000/api/products";
+
+export default function Inventory() {
+  const [inventory, setInventory] = useState([]);
+  const [products, setProducts] = useState([]);
+
+  const [form, setForm] = useState({
+    productId: "",
+    quantity: "",
+  });
+
+  const [editingId, setEditingId] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const token = localStorage.getItem("token");
+
+  const authConfig = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+
+  const loadInventory = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await axios.get(INVENTORY_URL, authConfig);
+
+      setInventory(
+        Array.isArray(response.data) ? response.data : []
+      );
+    } catch (err) {
+      console.error("LOAD INVENTORY ERROR:", err);
+
+      setError(
+        err.response?.data?.message ||
+          err.response?.data?.error ||
+          "Failed to load inventory."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadProducts = async () => {
+    try {
+      const response = await axios.get(PRODUCTS_URL, authConfig);
+
+      setProducts(
+        Array.isArray(response.data) ? response.data : []
+      );
+    } catch (err) {
+      console.error("LOAD PRODUCTS ERROR:", err);
+
+      setError(
+        err.response?.data?.message ||
+          err.response?.data?.error ||
+          "Failed to load products."
+      );
+    }
+  };
+
+  useEffect(() => {
+    loadInventory();
+    loadProducts();
+  }, []);
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+
+    setForm((currentForm) => ({
+      ...currentForm,
+      [name]: value,
+    }));
+  };
+
+  const resetForm = () => {
+    setEditingId(null);
+
+    setForm({
+      productId: "",
+      quantity: "",
+    });
+  };
+
+  const openAddModal = () => {
+    resetForm();
+    setError("");
+    setIsFormModalOpen(true);
+  };
+
+  const closeFormModal = () => {
+    resetForm();
+    setError("");
+    setIsFormModalOpen(false);
+  };
+
+  const closeViewModal = () => {
+    setSelectedItem(null);
+  };
+
+  const startEdit = (item) => {
+    setEditingId(item.id);
+
+    setForm({
+      productId: item.productId ?? "",
+      quantity: item.quantity ?? "",
+    });
+
+    setError("");
+    setIsFormModalOpen(true);
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    if (!form.productId) {
+      setError("Please select a product.");
+      return;
+    }
+
+    if (
+      form.quantity === "" ||
+      Number(form.quantity) < 0
+    ) {
+      setError("Quantity must be zero or greater.");
+      return;
+    }
+
+    const payload = {
+      productId: Number(form.productId),
+      quantity: Number(form.quantity),
+    };
+
+    try {
+      setSubmitting(true);
+      setError("");
+
+      if (editingId !== null) {
+        await axios.put(
+          `${INVENTORY_URL}/${editingId}`,
+          payload,
+          authConfig
+        );
+      } else {
+        await axios.post(
+          INVENTORY_URL,
+          payload,
+          authConfig
+        );
+      }
+
+      await loadInventory();
+      closeFormModal();
+    } catch (err) {
+      console.error("SUBMIT INVENTORY ERROR:", err);
+
+      setError(
+        err.response?.data?.message ||
+          err.response?.data?.error ||
+          "Failed to save inventory."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (item) => {
+    const productName =
+      item.product?.name || "this inventory item";
+
+    const confirmed = window.confirm(
+      `Are you sure you want to delete inventory for "${productName}"?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setError("");
+
+      await axios.delete(
+        `${INVENTORY_URL}/${item.id}`,
+        authConfig
+      );
+
+      await loadInventory();
+    } catch (err) {
+      console.error("DELETE INVENTORY ERROR:", err);
+
+      setError(
+        err.response?.data?.message ||
+          err.response?.data?.error ||
+          "Failed to delete inventory."
+      );
+    }
+  };
+
+  const getStockStatus = (quantity) => {
+    const stockQuantity = Number(quantity);
+
+    if (stockQuantity === 0) {
+      return {
+        label: "Out of Stock",
+        className: "status-out",
+      };
+    }
+
+    if (stockQuantity <= 10) {
+      return {
+        label: "Low Stock",
+        className: "status-low",
+      };
+    }
+
+    return {
+      label: "In Stock",
+      className: "status-active",
+    };
+  };
+
+  const filteredInventory = inventory.filter((item) => {
+    const searchValue = searchTerm.toLowerCase().trim();
+    const quantity = Number(item.quantity);
+
+    const matchesSearch =
+      !searchValue ||
+      item.product?.name
+        ?.toLowerCase()
+        .includes(searchValue);
+
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "in-stock" && quantity > 10) ||
+      (statusFilter === "low-stock" &&
+        quantity > 0 &&
+        quantity <= 10) ||
+      (statusFilter === "out-of-stock" &&
+        quantity === 0);
+
+    return matchesSearch && matchesStatus;
+  });
+
+  const totalItems = inventory.length;
+
+  const totalQuantity = inventory.reduce(
+    (sum, item) => sum + Number(item.quantity),
+    0
+  );
+
+  const lowStockCount = inventory.filter(
+    (item) =>
+      Number(item.quantity) > 0 &&
+      Number(item.quantity) <= 10
+  ).length;
+
+  const outOfStockCount = inventory.filter(
+    (item) => Number(item.quantity) === 0
+  ).length;
+
+  return (
+    <div className="module-page">
+      <div className="module-header">
+        <div>
+          <h1>📋 Inventory Management</h1>
+
+          <p>
+            Monitor stock quantities, product availability, and
+            low-stock inventory.
+          </p>
+        </div>
+
+        <div className="live-indicator">
+          <span className="live-dot"></span>
+          Live Data
+        </div>
+      </div>
+
+      <div className="module-stat-grid">
+        <div className="module-stat-card">
+          <div className="stat-icon">📦</div>
+
+          <div>
+            <span>Inventory Items</span>
+            <strong>{totalItems}</strong>
+            <small>Products being tracked</small>
+          </div>
+        </div>
+
+        <div className="module-stat-card">
+          <div className="stat-icon">🔢</div>
+
+          <div>
+            <span>Total Units</span>
+            <strong>{totalQuantity}</strong>
+            <small>Units currently available</small>
+          </div>
+        </div>
+
+        <div className="module-stat-card">
+          <div className="stat-icon">⚠️</div>
+
+          <div>
+            <span>Low Stock</span>
+            <strong>{lowStockCount}</strong>
+            <small>Products at 10 units or less</small>
+          </div>
+        </div>
+
+        <div className="module-stat-card">
+          <div className="stat-icon">🚫</div>
+
+          <div>
+            <span>Out of Stock</span>
+            <strong>{outOfStockCount}</strong>
+            <small>Products needing restock</small>
+          </div>
+        </div>
+      </div>
+
+      {error && <div className="module-error">{error}</div>}
+
+      <div className="module-table-card">
+        <div className="module-table-toolbar">
+          <div className="module-toolbar-filters">
+            <input
+              type="text"
+              placeholder="Search by product..."
+              value={searchTerm}
+              onChange={(event) =>
+                setSearchTerm(event.target.value)
+              }
+            />
+
+            <select
+              value={statusFilter}
+              onChange={(event) =>
+                setStatusFilter(event.target.value)
+              }
+            >
+              <option value="all">All stock statuses</option>
+              <option value="in-stock">In Stock</option>
+              <option value="low-stock">Low Stock</option>
+              <option value="out-of-stock">
+                Out of Stock
+              </option>
+            </select>
+          </div>
+
+          <button
+            type="button"
+            className="primary-button"
+            onClick={openAddModal}
+          >
+            + Add Inventory
+          </button>
+        </div>
+
+        <div className="module-table-wrapper">
+          {loading ? (
+            <div className="module-state-message">
+              Loading inventory...
+            </div>
+          ) : filteredInventory.length === 0 ? (
+            <div className="module-state-message">
+              No inventory items found.
+            </div>
+          ) : (
+            <table className="module-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Product</th>
+                  <th>Quantity</th>
+                  <th>Stock Status</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {filteredInventory.map((item) => {
+                  const stockStatus = getStockStatus(
+                    item.quantity
+                  );
+
+                  return (
+                    <tr key={item.id}>
+                      <td>{item.id}</td>
+
+                      <td>
+                        <strong>
+                          {item.product?.name || "—"}
+                        </strong>
+                      </td>
+
+                      <td>{item.quantity}</td>
+
+                      <td>
+                        <span
+                          className={`status-badge ${stockStatus.className}`}
+                        >
+                          {stockStatus.label}
+                        </span>
+                      </td>
+
+                      <td>
+                        {item.createdAt
+                          ? new Date(
+                              item.createdAt
+                            ).toLocaleDateString()
+                          : "—"}
+                      </td>
+
+                      <td>
+                        <div className="module-actions">
+                          <button
+                            type="button"
+                            className="view-button"
+                            onClick={() =>
+                              setSelectedItem(item)
+                            }
+                          >
+                            View
+                          </button>
+
+                          <button
+                            type="button"
+                            className="edit-button"
+                            onClick={() => startEdit(item)}
+                          >
+                            Edit
+                          </button>
+
+                          <button
+                            type="button"
+                            className="delete-button"
+                            onClick={() => handleDelete(item)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+
+      <Modal
+        isOpen={isFormModalOpen}
+        title={
+          editingId !== null
+            ? "Edit Inventory"
+            : "Add Inventory"
+        }
+        onClose={closeFormModal}
+        footer={
+          <>
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={closeFormModal}
+              disabled={submitting}
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              form="inventory-form"
+              className="primary-button"
+              disabled={submitting}
+            >
+              {submitting
+                ? "Saving..."
+                : editingId !== null
+                  ? "Update Inventory"
+                  : "Add Inventory"}
+            </button>
+          </>
+        }
+      >
+        <form
+          id="inventory-form"
+          className="module-form"
+          onSubmit={handleSubmit}
+        >
+          <div className="form-group">
+            <label htmlFor="inventory-product">
+              Product
+            </label>
+
+            <select
+              id="inventory-product"
+              name="productId"
+              value={form.productId}
+              onChange={handleInputChange}
+              disabled={editingId !== null}
+            >
+              <option value="">Select product</option>
+
+              {products.map((product) => (
+                <option
+                  key={product.id}
+                  value={product.id}
+                >
+                  {product.name}
+                </option>
+              ))}
+            </select>
+
+            {editingId !== null && (
+              <small>
+                Product cannot be changed while editing.
+              </small>
+            )}
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="inventory-quantity">
+              Quantity
+            </label>
+
+            <input
+              id="inventory-quantity"
+              type="number"
+              name="quantity"
+              min="0"
+              step="1"
+              placeholder="Enter stock quantity"
+              value={form.quantity}
+              onChange={handleInputChange}
+            />
+          </div>
+        </form>
+      </Modal>
+
+      <Modal
+        isOpen={Boolean(selectedItem)}
+        title="Inventory Details"
+        onClose={closeViewModal}
+        footer={
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={closeViewModal}
+          >
+            Close
+          </button>
+        }
+      >
+        {selectedItem && (
+          <>
+            <div className="employee-profile-summary">
+              <div className="employee-profile-avatar">
+                📋
+              </div>
+
+              <div>
+                <h3>
+                  {selectedItem.product?.name ||
+                    "Inventory Item"}
+                </h3>
+
+                <p>
+                  Current stock quantity:{" "}
+                  {selectedItem.quantity}
+                </p>
+              </div>
+            </div>
+
+            <div className="employee-details-grid">
+              <div className="detail-item">
+                <span className="detail-label">
+                  Inventory ID
+                </span>
+
+                <strong>{selectedItem.id}</strong>
+              </div>
+
+              <div className="detail-item">
+                <span className="detail-label">
+                  Product
+                </span>
+
+                <strong>
+                  {selectedItem.product?.name || "—"}
+                </strong>
+              </div>
+
+              <div className="detail-item">
+                <span className="detail-label">
+                  Quantity
+                </span>
+
+                <strong>{selectedItem.quantity}</strong>
+              </div>
+
+              <div className="detail-item">
+                <span className="detail-label">
+                  Stock Status
+                </span>
+
+                <strong>
+                  {
+                    getStockStatus(selectedItem.quantity)
+                      .label
+                  }
+                </strong>
+              </div>
+
+              <div className="detail-item">
+                <span className="detail-label">
+                  Created
+                </span>
+
+                <strong>
+                  {selectedItem.createdAt
+                    ? new Date(
+                        selectedItem.createdAt
+                      ).toLocaleDateString()
+                    : "—"}
+                </strong>
+              </div>
+            </div>
+          </>
+        )}
+      </Modal>
+    </div>
+  );
+}

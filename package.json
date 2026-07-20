@@ -1,0 +1,15 @@
+{
+  "name": "ebmspro",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "backend": "npm --workspace backend run dev",
+    "frontend": "npm --workspace frontend run dev"
+  }
+}
+
+
