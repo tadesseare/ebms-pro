@@ -94,6 +94,22 @@ export default function Dashboard() {
   const customers = Number(counts.customers ?? 0);
   const suppliers = Number(counts.suppliers ?? 0);
   const products = Number(counts.products ?? 0);
+  const workforce = data.workforce ?? {};
+
+const activeEmployees = Number(workforce.active ?? 0);
+const employeesOnLeave = Number(workforce.onLeave ?? 0);
+const inactiveEmployees = Number(workforce.inactive ?? 0);
+const averageSalary = Number(workforce.averageSalary ?? 0);
+
+const newestEmployee =
+  workforce.newestEmployee?.name ??
+  workforce.newestEmployee ??
+  "Not available";
+
+const largestDepartment =
+  workforce.largestDepartment?.name ??
+  workforce.largestDepartment ??
+  "Not available";
 
   const salesToday = Number(data.salesToday ?? 0);
   const purchasesToday = Number(data.purchasesToday ?? 0);
@@ -101,6 +117,23 @@ export default function Dashboard() {
   const inventoryTotal = Number(data.inventoryTotal ?? 0);
   const weeklyRevenue = Number(data.weeklyRevenue ?? 0);
   const weeklyQuantity = Number(data.weeklyQuantity ?? 0);
+  // Executive Business Health
+
+const healthScore =
+  profitToday > 0
+    ? lowStock.length === 0
+      ? 95
+      : 82
+    : 60;
+
+const healthStatus =
+  healthScore >= 90
+    ? "Excellent"
+    : healthScore >= 75
+    ? "Good"
+    : healthScore >= 60
+    ? "Fair"
+    : "Needs Attention";
 
   const lowStock = Array.isArray(data.lowStock)
     ? data.lowStock
@@ -109,6 +142,9 @@ export default function Dashboard() {
   const dailySales = Array.isArray(data.dailySales)
     ? data.dailySales
     : [];
+    const recentActivities = Array.isArray(data.recentActivities)
+  ? data.recentActivities
+  : [];
 
   const currentDate = new Date().toLocaleDateString(undefined, {
     weekday: "long",
@@ -125,40 +161,74 @@ export default function Dashboard() {
   return (
     <main className="dashboard-page">
       <section className="dashboard-header">
-        <div>
-          <p className="dashboard-eyebrow">
-            Enterprise Business Management System
-          </p>
+  <div>
+    <p className="dashboard-eyebrow">
+      Enterprise Business Management System
+    </p>
 
-          <h1>Business Dashboard</h1>
+    <h1>Business Dashboard</h1>
 
-          <p className="dashboard-welcome">
-            Welcome back, <strong>{displayName}</strong>. Here is your current
-            business overview.
-          </p>
+    <p className="dashboard-welcome">
+      Welcome back to <strong>EBMS PRO</strong>.
+    </p>
 
-          <div className="dashboard-meta">
-            <span>{currentDate}</span>
+    <p className="dashboard-subtitle">
+      Here's your business overview for today.
+    </p>
 
-            {user?.role && (
-              <span className="role-badge">{user.role}</span>
-            )}
-          </div>
-        </div>
+    <div className="dashboard-meta">
+      <span>{currentDate}</span>
 
-        <button
-          type="button"
-          className="refresh-button"
-          onClick={() => fetchDashboard(true)}
-          disabled={refreshing}
-        >
-          <span className={refreshing ? "refresh-icon spinning" : "refresh-icon"}>
-            ↻
-          </span>
+      {user?.role && (
+        <span className="role-badge">
+          {user.role}
+        </span>
+      )}
+    </div>
+  </div>
 
-          {refreshing ? "Refreshing..." : "Refresh Dashboard"}
-        </button>
-      </section>
+  <div className="dashboard-toolbar">
+    <div className="live-status">
+      <span className="live-dot"></span>
+
+      <div>
+        <strong>Live Database</strong>
+        <small>Connected</small>
+      </div>
+    </div>
+
+    <div className="last-updated">
+      <small>Updated</small>
+      <strong>
+        {new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}
+      </strong>
+    </div>
+
+    <button
+      type="button"
+      className="refresh-button"
+      onClick={() => fetchDashboard(true)}
+      disabled={refreshing}
+    >
+      <span
+        className={
+          refreshing
+            ? "refresh-icon spinning"
+            : "refresh-icon"
+        }
+      >
+        ↻
+      </span>
+
+      {refreshing
+        ? "Refreshing..."
+        : "Refresh Dashboard"}
+    </button>
+  </div>
+</section>
 
       <section className="dashboard-section">
         <div className="section-heading">
@@ -286,7 +356,137 @@ export default function Dashboard() {
           </div>
         </div>
       </section>
+       <section className="dashboard-section">
 
+  <article className="business-health">
+
+    <div className="business-health-header">
+
+      <div>
+
+        <p className="section-kicker">
+          Executive Summary
+        </p>
+
+        <h2>
+          Business Health
+        </h2>
+
+      </div>
+
+      <span
+        className={`health-badge ${
+          healthScore >= 90
+            ? "excellent"
+            : healthScore >= 75
+            ? "good"
+            : "warning"
+        }`}
+      >
+        {healthStatus}
+      </span>
+
+    </div>
+
+    <div className="health-progress">
+
+      <div
+        className="health-progress-fill"
+        style={{
+          width: `${healthScore}%`,
+        }}
+      />
+
+    </div>
+
+    <div className="health-score">
+
+      <h1>{healthScore}%</h1>
+
+      <p>
+        Overall Business Performance
+      </p>
+
+    </div>
+
+    <div className="health-list">
+
+      <div>
+
+        {profitToday >= 0 ? "✅" : "⚠️"}
+
+        Revenue Performance
+
+      </div>
+
+      <div>
+
+        {lowStock.length === 0 ? "✅" : "⚠️"}
+
+        Inventory Status
+
+      </div>
+
+      <div>
+
+        {employees > 0 ? "✅" : "⚠️"}
+
+        Workforce Ready
+
+      </div>
+
+    </div>
+
+  </article>
+
+  </section>
+  <section className="dashboard-section">
+  <div className="section-heading">
+    <div>
+      <p className="section-kicker">System Activity</p>
+      <h2>Recent Activity</h2>
+    </div>
+
+    <p>Latest transactions and updates across EBMS PRO.</p>
+  </div>
+
+  <article className="activity-panel">
+    <div className="activity-panel-header">
+      <div>
+        <h3>Business Timeline</h3>
+        <p>Recent events recorded in the system.</p>
+      </div>
+
+      <span className="activity-live-badge">
+        <span className="activity-live-dot"></span>
+        Live
+      </span>
+    </div>
+
+    <div className="activity-list">
+      {recentActivities.length === 0 ? (
+        <div className="activity-empty">
+          <span>🕘</span>
+
+          <div>
+            <strong>No recent activity available</strong>
+            <p>
+              New sales, purchases, employees, customers, and inventory
+              updates will appear here.
+            </p>
+          </div>
+        </div>
+      ) : (
+        recentActivities.map((activity, index) => (
+          <ActivityItem
+            key={activity.id ?? index}
+            activity={activity}
+          />
+        ))
+      )}
+    </div>
+  </article>
+ </section>
       <section className="dashboard-section">
         <div className="dashboard-content-grid">
           <DashboardPanel
@@ -402,7 +602,90 @@ export default function Dashboard() {
           </DashboardPanel>
         </div>
       </section>
+      <section className="dashboard-section">
+  <div className="section-heading">
+    <div>
+      <p className="section-kicker">Human Resources</p>
+      <h2>Workforce Overview</h2>
+    </div>
 
+    <p>Current employee status and workforce information.</p>
+  </div>
+
+  <div className="workforce-layout">
+    <div className="workforce-kpi-grid">
+      <WorkforceCard
+        label="Total Employees"
+        value={formatNumber(employees)}
+        icon="👥"
+        accent="blue"
+      />
+
+      <WorkforceCard
+        label="Active Employees"
+        value={formatNumber(activeEmployees)}
+        icon="✓"
+        accent="green"
+      />
+
+      <WorkforceCard
+        label="On Leave"
+        value={formatNumber(employeesOnLeave)}
+        icon="◷"
+        accent="orange"
+      />
+
+      <WorkforceCard
+        label="Inactive"
+        value={formatNumber(inactiveEmployees)}
+        icon="−"
+        accent="red"
+      />
+    </div>
+
+    <article className="workforce-details-card">
+      <div className="workforce-details-header">
+        <div>
+          <p className="section-kicker">Workforce Insights</p>
+          <h3>Employee Summary</h3>
+        </div>
+
+        <button
+          type="button"
+          className="panel-button"
+          onClick={() => navigate("/employees")}
+        >
+          View Employees
+        </button>
+      </div>
+
+      <div className="workforce-detail-list">
+        <WorkforceDetail
+          label="Average Salary"
+          value={
+            averageSalary > 0
+              ? formatCurrency(averageSalary)
+              : "Not available"
+          }
+          icon="💵"
+        />
+
+        <WorkforceDetail
+          label="Newest Employee"
+          value={newestEmployee}
+          icon="👤"
+        />
+
+        <WorkforceDetail
+          label="Largest Department"
+          value={largestDepartment}
+          icon="🏢"
+        />
+      </div>
+    </article>
+  </div>
+</section>
+  
       <section className="dashboard-section">
         <DashboardPanel
           title="Daily Sales for the Last 7 Days"
@@ -454,7 +737,83 @@ export default function Dashboard() {
     </main>
   );
 }
+function ActivityItem({ activity }) {
+  const type = activity.type ?? "general";
 
+  const activityConfig = {
+    sale: {
+      icon: "💰",
+      className: "sale",
+    },
+    purchase: {
+      icon: "🛒",
+      className: "purchase",
+    },
+    employee: {
+      icon: "👤",
+      className: "employee",
+    },
+    customer: {
+      icon: "🤝",
+      className: "customer",
+    },
+    supplier: {
+      icon: "🚚",
+      className: "supplier",
+    },
+    product: {
+      icon: "📦",
+      className: "product",
+    },
+    inventory: {
+      icon: "🏬",
+      className: "inventory",
+    },
+    general: {
+      icon: "🔔",
+      className: "general",
+    },
+  };
+
+  const config =
+    activityConfig[type] ??
+    activityConfig.general;
+
+  const title =
+    activity.title ??
+    activity.message ??
+    "Business activity recorded";
+
+  const description =
+    activity.description ??
+    activity.details ??
+    "";
+
+  const dateValue =
+    activity.createdAt ??
+    activity.date ??
+    activity.timestamp;
+
+  return (
+    <div className="activity-item">
+      <div
+        className={`activity-icon activity-icon-${config.className}`}
+      >
+        {config.icon}
+      </div>
+
+      <div className="activity-content">
+        <div className="activity-title-row">
+          <strong>{title}</strong>
+
+          <span>{formatActivityTime(dateValue)}</span>
+        </div>
+
+        {description && <p>{description}</p>}
+      </div>
+    </div>
+  );
+}
 function StatCard({
   label,
   value,
@@ -522,7 +881,46 @@ function StatCardContent({
     </>
   );
 }
+function WorkforceCard({
+  label,
+  value,
+  icon,
+  accent = "blue",
+}) {
+  return (
+    <article
+      className={`workforce-card workforce-card-${accent}`}
+    >
+      <div className="workforce-card-icon">
+        {icon}
+      </div>
 
+      <div>
+        <p>{label}</p>
+        <h3>{value}</h3>
+      </div>
+    </article>
+  );
+}
+
+function WorkforceDetail({
+  label,
+  value,
+  icon,
+}) {
+  return (
+    <div className="workforce-detail">
+      <span className="workforce-detail-icon">
+        {icon}
+      </span>
+
+      <div>
+        <p>{label}</p>
+        <strong>{value}</strong>
+      </div>
+    </div>
+  );
+}
 function DashboardPanel({
   title,
   subtitle,
@@ -601,4 +999,40 @@ function formatCurrency(value) {
     style: "currency",
     currency: "USD",
   }).format(Number(value ?? 0));
+}
+function formatActivityTime(dateValue) {
+  if (!dateValue) {
+    return "Recently";
+  }
+
+  const activityDate = new Date(dateValue);
+
+  if (Number.isNaN(activityDate.getTime())) {
+    return "Recently";
+  }
+
+  const now = new Date();
+  const difference = now.getTime() - activityDate.getTime();
+
+  const minutes = Math.floor(difference / 60000);
+  const hours = Math.floor(difference / 3600000);
+  const days = Math.floor(difference / 86400000);
+
+  if (minutes < 1) {
+    return "Just now";
+  }
+
+  if (minutes < 60) {
+    return `${minutes} min ago`;
+  }
+
+  if (hours < 24) {
+    return `${hours} hr ago`;
+  }
+
+  if (days < 7) {
+    return `${days} day${days === 1 ? "" : "s"} ago`;
+  }
+
+  return activityDate.toLocaleDateString();
 }

@@ -6,14 +6,22 @@ import prisma from "../Lib/prisma.js";
 export const getPurchases = async (req, res) => {
   try {
     const purchases = await prisma.purchase.findMany({
-      include: { product: true, supplier: true },
-      orderBy: { id: "desc" }
+      include: {
+        product: true,
+        supplier: true,
+      },
+      orderBy: {
+        id: "desc",
+      },
     });
 
     res.json(purchases);
   } catch (err) {
     console.error("GET PURCHASES ERROR:", err);
-    res.status(500).json({ message: err.message });
+
+    res.status(500).json({
+      message: "Failed to load purchases.",
+    });
   }
 };
 
@@ -22,67 +30,115 @@ export const getPurchases = async (req, res) => {
  */
 export const createPurchase = async (req, res) => {
   try {
-    const { productId, supplierId, quantity, costPerUnit } = req.body;
+    const productId = Number(req.body.productId);
+    const supplierId = Number(req.body.supplierId);
+    const quantity = Number(req.body.quantity);
+    const costPerUnit = Number(req.body.costPerUnit);
 
-    if (!productId || !supplierId || !quantity || !costPerUnit) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
-
-    if (quantity <= 0) {
-      return res.status(400).json({ message: "Quantity must be greater than zero" });
-    }
-
-    if (costPerUnit <= 0) {
-      return res.status(400).json({ message: "Cost per unit must be greater than zero" });
-    }
-
-    const product = await prisma.product.findUnique({
-      where: { id: Number(productId) }
-    });
-
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
-    }
-
-    const supplier = await prisma.supplier.findUnique({
-      where: { id: Number(supplierId) }
-    });
-
-    if (!supplier) {
-      return res.status(404).json({ message: "Supplier not found" });
-    }
-
-    // Ensure inventory record exists
-    let inventory = await prisma.inventory.findUnique({
-      where: { productId: Number(productId) }
-    });
-
-    if (!inventory) {
-      inventory = await prisma.inventory.create({
-        data: { productId: Number(productId), quantity: 0 }
+    if (
+      !Number.isInteger(productId) ||
+      !Number.isInteger(supplierId) ||
+      !Number.isInteger(quantity)
+    ) {
+      return res.status(400).json({
+        message:
+          "Product, supplier, and quantity are required.",
       });
     }
 
-    // Create purchase
-    const purchase = await prisma.purchase.create({
-      data: {
-        productId: Number(productId),
-        supplierId: Number(supplierId),
-        quantity: Number(quantity),
-        costPerUnit: Number(costPerUnit)
+    if (quantity <= 0) {
+      return res.status(400).json({
+        message: "Quantity must be greater than zero.",
+      });
+    }
+
+    if (
+      !Number.isFinite(costPerUnit) ||
+      costPerUnit <= 0
+    ) {
+      return res.status(400).json({
+        message:
+          "Cost per unit must be greater than zero.",
+      });
+    }
+
+    const result = await prisma.$transaction(
+      async (tx) => {
+        const product = await tx.product.findUnique({
+          where: {
+            id: productId,
+          },
+        });
+
+        if (!product) {
+          const error = new Error("Product not found.");
+          error.statusCode = 404;
+          throw error;
+        }
+
+        const supplier = await tx.supplier.findUnique({
+          where: {
+            id: supplierId,
+          },
+        });
+
+        if (!supplier) {
+          const error = new Error("Supplier not found.");
+          error.statusCode = 404;
+          throw error;
+        }
+
+        const purchase = await tx.purchase.create({
+          data: {
+            productId,
+            supplierId,
+            quantity,
+            costPerUnit,
+          },
+          include: {
+            product: true,
+            supplier: true,
+          },
+        });
+
+        const inventory =
+          await tx.inventory.upsert({
+            where: {
+              productId,
+            },
+            update: {
+              quantity: {
+                increment: quantity,
+              },
+            },
+            create: {
+              productId,
+              quantity,
+            },
+            include: {
+              product: true,
+            },
+          });
+
+        return {
+          purchase,
+          inventory,
+        };
       }
-    });
+    );
 
-    // Increase inventory
-    await prisma.inventory.update({
-      where: { id: inventory.id },
-      data: { quantity: { increment: Number(quantity) } }
+    res.status(201).json({
+      message: "Purchase recorded successfully.",
+      purchase: result.purchase,
+      inventory: result.inventory,
     });
-
-    res.status(201).json(purchase);
   } catch (err) {
     console.error("CREATE PURCHASE ERROR:", err);
-    res.status(500).json({ message: err.message });
+
+    res.status(err.statusCode || 500).json({
+      message:
+        err.message || "Failed to record purchase.",
+    });
   }
 };
 
@@ -93,19 +149,39 @@ export const getPurchaseById = async (req, res) => {
   try {
     const id = Number(req.params.id);
 
-    const purchase = await prisma.purchase.findUnique({
-      where: { id },
-      include: { product: true, supplier: true }
-    });
+    if (!Number.isInteger(id)) {
+      return res.status(400).json({
+        message: "Invalid purchase ID.",
+      });
+    }
+
+    const purchase =
+      await prisma.purchase.findUnique({
+        where: {
+          id,
+        },
+        include: {
+          product: true,
+          supplier: true,
+        },
+      });
 
     if (!purchase) {
-      return res.status(404).json({ message: "Purchase not found" });
+      return res.status(404).json({
+        message: "Purchase not found.",
+      });
     }
 
     res.json(purchase);
   } catch (err) {
-    console.error("GET PURCHASE BY ID ERROR:", err);
-    res.status(500).json({ message: err.message });
+    console.error(
+      "GET PURCHASE BY ID ERROR:",
+      err
+    );
+
+    res.status(500).json({
+      message: "Failed to load the purchase.",
+    });
   }
 };
 
@@ -116,24 +192,83 @@ export const deletePurchase = async (req, res) => {
   try {
     const id = Number(req.params.id);
 
-    const purchase = await prisma.purchase.findUnique({ where: { id } });
-
-    if (!purchase) {
-      return res.status(404).json({ message: "Purchase not found" });
+    if (!Number.isInteger(id)) {
+      return res.status(400).json({
+        message: "Invalid purchase ID.",
+      });
     }
 
-    // Reverse inventory increase
-    await prisma.inventory.update({
-      where: { productId: purchase.productId },
-      data: { quantity: { decrement: purchase.quantity } }
+    await prisma.$transaction(async (tx) => {
+      const purchase =
+        await tx.purchase.findUnique({
+          where: {
+            id,
+          },
+        });
+
+      if (!purchase) {
+        const error = new Error(
+          "Purchase not found."
+        );
+        error.statusCode = 404;
+        throw error;
+      }
+
+      const inventory =
+        await tx.inventory.findUnique({
+          where: {
+            productId: purchase.productId,
+          },
+        });
+
+      if (!inventory) {
+        const error = new Error(
+          "The related inventory record was not found."
+        );
+        error.statusCode = 400;
+        throw error;
+      }
+
+      /*
+       * Prevent negative stock when purchased units
+       * have already been sold or otherwise removed.
+       */
+      if (inventory.quantity < purchase.quantity) {
+        const error = new Error(
+          "This purchase cannot be deleted because some of its units have already been sold or removed from inventory."
+        );
+        error.statusCode = 400;
+        throw error;
+      }
+
+      await tx.inventory.update({
+        where: {
+          productId: purchase.productId,
+        },
+        data: {
+          quantity: {
+            decrement: purchase.quantity,
+          },
+        },
+      });
+
+      await tx.purchase.delete({
+        where: {
+          id,
+        },
+      });
     });
 
-    await prisma.purchase.delete({ where: { id } });
-
-    res.json({ message: "Purchase deleted" });
+    res.json({
+      message:
+        "Purchase deleted and inventory adjusted.",
+    });
   } catch (err) {
     console.error("DELETE PURCHASE ERROR:", err);
-    res.status(500).json({ message: err.message });
+
+    res.status(err.statusCode || 500).json({
+      message:
+        err.message || "Failed to delete purchase.",
+    });
   }
 };
-

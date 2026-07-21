@@ -12,7 +12,9 @@ import employeeRoutes from "./routes/employees.routes.js";
 import customerRoutes from "./routes/customers.routes.js";
 import productRoutes from "./routes/products.routes.js";
 import inventoryRoutes from "./routes/inventory.routes.js";
-
+import salesRoutes from "./routes/sales.routes.js";
+import purchaseRoutes from "./routes/purchase.routes.js";
+import reportsRoutes from "./routes/reports.routes.js";
 const app = express();
 
 app.use(
@@ -40,6 +42,9 @@ app.use("/api/employees", employeeRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/inventory", inventoryRoutes);
+app.use("/api/sales", salesRoutes);
+app.use("/api/purchases", purchaseRoutes);
+app.use("/api/reports", reportsRoutes);
 
 const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, "127.0.0.1", () => {

@@ -1,19 +1,22 @@
 import { Router } from "express";
-import { authenticate } from "../middleware/authenticate.js";
-import { authorize } from "../middleware/authorize.js";
 
 import {
+  getDashboardSummary,
   getDailySalesReport,
   getDailyPurchaseReport,
   getInventorySummary,
   getLowStockReport,
   getProfitReport,
-  getDashboardSummary
 } from "../controllers/reports.controller.js";
+
+import { authenticate } from "../middleware/authenticate.js";
+import { authorize } from "../middleware/authorize.js";
 
 const router = Router();
 
-// Dashboard KPIs
+/*
+ * Executive report summary
+ */
 router.get(
   "/dashboard-summary",
   authenticate,
@@ -21,7 +24,9 @@ router.get(
   getDashboardSummary
 );
 
-// Sales Reports
+/*
+ * Daily sales report
+ */
 router.get(
   "/sales/daily",
   authenticate,
@@ -29,7 +34,9 @@ router.get(
   getDailySalesReport
 );
 
-// Purchase Reports
+/*
+ * Daily purchase report
+ */
 router.get(
   "/purchases/daily",
   authenticate,
@@ -37,7 +44,9 @@ router.get(
   getDailyPurchaseReport
 );
 
-// Inventory Reports
+/*
+ * Inventory summary
+ */
 router.get(
   "/inventory/summary",
   authenticate,
@@ -45,6 +54,9 @@ router.get(
   getInventorySummary
 );
 
+/*
+ * Low-stock report
+ */
 router.get(
   "/inventory/low-stock",
   authenticate,
@@ -52,7 +64,9 @@ router.get(
   getLowStockReport
 );
 
-// Profit Report
+/*
+ * Revenue, expenses, and profit
+ */
 router.get(
   "/profit",
   authenticate,
@@ -61,4 +75,3 @@ router.get(
 );
 
 export default router;
-

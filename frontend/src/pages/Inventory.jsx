@@ -100,10 +100,17 @@ export default function Inventory() {
   };
 
   const openAddModal = () => {
-    resetForm();
-    setError("");
-    setIsFormModalOpen(true);
-  };
+  if (availableProducts.length === 0) {
+    setError(
+      "All products are already being tracked. Create a new product first."
+    );
+    return;
+  }
+
+  resetForm();
+  setError("");
+  setIsFormModalOpen(true);
+};
 
   const closeFormModal = () => {
     resetForm();
@@ -255,7 +262,12 @@ export default function Inventory() {
 
     return matchesSearch && matchesStatus;
   });
-
+const availableProducts = products.filter(
+  (product) =>
+    !inventory.some(
+      (item) => Number(item.productId) === Number(product.id)
+    )
+);
   const totalItems = inventory.length;
 
   const totalQuantity = inventory.reduce(
@@ -362,13 +374,13 @@ export default function Inventory() {
             </select>
           </div>
 
-          <button
-            type="button"
-            className="primary-button"
-            onClick={openAddModal}
-          >
-            + Add Inventory
-          </button>
+         <button
+       type="button"
+       className="primary-button"
+       onClick={openAddModal}
+>
+       + Add Product to Inventory
+      </button>
         </div>
 
         <div className="module-table-wrapper">
@@ -509,24 +521,28 @@ export default function Inventory() {
               Product
             </label>
 
-            <select
-              id="inventory-product"
-              name="productId"
-              value={form.productId}
-              onChange={handleInputChange}
-              disabled={editingId !== null}
-            >
-              <option value="">Select product</option>
+  <select
+  id="inventory-product"
+  name="productId"
+  value={form.productId}
+  onChange={handleInputChange}
+  disabled={editingId !== null}
+  required
+>
+  <option value="">Select product</option>
 
-              {products.map((product) => (
-                <option
-                  key={product.id}
-                  value={product.id}
-                >
-                  {product.name}
-                </option>
-              ))}
-            </select>
+  {(editingId !== null
+    ? products.filter(
+        (product) =>
+          Number(product.id) === Number(form.productId)
+      )
+    : availableProducts
+  ).map((product) => (
+    <option key={product.id} value={product.id}>
+      {product.name}
+    </option>
+  ))}
+</select>
 
             {editingId !== null && (
               <small>
