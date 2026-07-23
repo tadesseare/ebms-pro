@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import Modal from "../components/Modal";
 import "../styles/ModulePage.css";
+import "./Inventory.css";
 
 const INVENTORY_URL = "http://127.0.0.1:5000/api/inventory";
 const PRODUCTS_URL = "http://127.0.0.1:5000/api/products";
@@ -274,7 +275,15 @@ const availableProducts = products.filter(
     (sum, item) => sum + Number(item.quantity),
     0
   );
+const inventoryValue = inventory.reduce(
+  (sum, item) => {
+    const quantity = Number(item.quantity ?? 0);
+    const price = Number(item.product?.price ?? 0);
 
+    return sum + quantity * price;
+  },
+  0
+);
   const lowStockCount = inventory.filter(
     (item) =>
       Number(item.quantity) > 0 &&
@@ -285,67 +294,112 @@ const availableProducts = products.filter(
     (item) => Number(item.quantity) === 0
   ).length;
 
-  return (
-    <div className="module-page">
-      <div className="module-header">
-        <div>
-          <h1>📋 Inventory Management</h1>
+ return (
+  <div className="module-page">
+    <section className="inventory-header">
+      <div className="inventory-header-content">
+        <p className="inventory-eyebrow">
+          Inventory Control System
+        </p>
 
-          <p>
-            Monitor stock quantities, product availability, and
-            low-stock inventory.
-          </p>
-        </div>
+        <h1>Inventory Management</h1>
 
-        <div className="live-indicator">
+        <p className="inventory-subtitle">
+          Monitor stock levels, inventory value, product availability,
+          and restocking needs.
+        </p>
+      </div>
+
+      <div className="inventory-header-actions">
+        <div className="inventory-live-status">
           <span className="live-dot"></span>
-          Live Data
+
+          <div>
+            <strong>Live Database</strong>
+            <small>Inventory connected</small>
+          </div>
         </div>
+
+        <button
+          type="button"
+          className="inventory-refresh-button"
+          onClick={() => {
+            loadInventory();
+            loadProducts();
+          }}
+          disabled={loading}
+        >
+          ↻ {loading ? "Refreshing..." : "Refresh"}
+        </button>
+
+        <button
+          type="button"
+          className="inventory-add-button"
+          onClick={openAddModal}
+        >
+          + Add Inventory
+        </button>
       </div>
+    </section>
 
-      <div className="module-stat-grid">
-        <div className="module-stat-card">
-          <div className="stat-icon">📦</div>
+          
+<div className="module-stat-grid">
+  <div className="module-stat-card">
+  <div className="stat-icon">📦</div>
 
-          <div>
-            <span>Inventory Items</span>
-            <strong>{totalItems}</strong>
-            <small>Products being tracked</small>
-          </div>
-        </div>
+  <div>
+    <span>Inventory Items</span>
+    <strong>{totalItems}</strong>
+    <small>Products being tracked</small>
+  </div>
+</div>
 
-        <div className="module-stat-card">
-          <div className="stat-icon">🔢</div>
+<div className="module-stat-card">
+  <div className="stat-icon">📊</div>
 
-          <div>
-            <span>Total Units</span>
-            <strong>{totalQuantity}</strong>
-            <small>Units currently available</small>
-          </div>
-        </div>
+  <div>
+    <span>Total Units</span>
+    <strong>{totalQuantity}</strong>
+    <small>Units currently available</small>
+  </div>
+</div>
+<div className="module-stat-card inventory-value-card">
+  <div className="stat-icon">💰</div>
 
-        <div className="module-stat-card">
-          <div className="stat-icon">⚠️</div>
+  <span>Inventory Value</span>
 
-          <div>
-            <span>Low Stock</span>
-            <strong>{lowStockCount}</strong>
-            <small>Products at 10 units or less</small>
-          </div>
-        </div>
+  <strong>
+    {inventoryValue.toLocaleString(undefined, {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+    })}
+  </strong>
 
-        <div className="module-stat-card">
-          <div className="stat-icon">🚫</div>
+  <small>Total stock value</small>
+</div>
 
-          <div>
-            <span>Out of Stock</span>
-            <strong>{outOfStockCount}</strong>
-            <small>Products needing restock</small>
-          </div>
-        </div>
-      </div>
+  <div className="module-stat-card">
+    <div className="stat-icon">⚠️</div>
 
-      {error && <div className="module-error">{error}</div>}
+    <div>
+      <span>Low Stock</span>
+      <strong>{lowStockCount}</strong>
+      <small>Products at 10 units or less</small>
+    </div>
+  </div>
+
+  <div className="module-stat-card">
+    <div className="stat-icon">🚫</div>
+
+    <div>
+      <span>Out of Stock</span>
+      <strong>{outOfStockCount}</strong>
+      <small>Products needing restock</small>
+    </div>
+  </div>
+</div>
+{error && <div className="module-error">{error}</div>}
 
       <div className="module-table-card">
         <div className="module-table-toolbar">

@@ -10,6 +10,8 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  Label,
+  LabelList,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -102,10 +104,75 @@ const STATUS_COLORS = [
       value: employeeMetrics.inactiveEmployees,
     },
   ];
-const salaryChartData = employees.map((employee) => ({
-  name: employee.name,
-  salary: Number(employee.salary || 0),
-}));
+const departmentChartData = useMemo(() => {
+  const getDepartment = (position = "") => {
+  const value = position.toLowerCase();
+
+  if (value.includes("chief executive")) {
+    return "Executive";
+  }
+
+  if (
+    value.includes("finance") ||
+    value.includes("accountant")
+  ) {
+    return "Finance";
+  }
+
+  if (value.includes("hr")) {
+    return "Human Resources";
+  }
+
+  if (
+    value.includes("sales") ||
+    value.includes("marketing")
+  ) {
+    return "Sales & Marketing";
+  }
+
+
+    if (
+      value.includes("inventory") ||
+      value.includes("warehouse") ||
+      value.includes("storekeeper") ||
+      value.includes("delivery") ||
+      value.includes("driver") ||
+      value.includes("procurement")
+    ) {
+      return "Operations";
+    }
+
+    if (value.includes("it support")) {
+      return "Information Technology";
+    }
+
+    if (
+      value.includes("administrative") ||
+      value.includes("receptionist") ||
+      value.includes("customer service") ||
+      value.includes("cashier")
+    ) {
+      return "Administration";
+    }
+
+    return "Other";
+  };
+
+  const counts = employees.reduce((result, employee) => {
+    const department = getDepartment(employee.position);
+
+    result[department] = (result[department] || 0) + 1;
+
+    return result;
+  }, {});
+
+  return Object.entries(counts)
+    .map(([name, employees]) => ({
+      name,
+      employees,
+    }))
+    .sort((a, b) => b.employees - a.employees);
+}, [employees]);
 
   const filteredEmployees = useMemo(() => {
     const value = search.trim().toLowerCase();
@@ -255,6 +322,7 @@ if (loading) {
 }
 
 if (error) {
+  
   return (
     <main className="module-page">
       <p className="error-message">{error}</p>
@@ -269,6 +337,16 @@ if (error) {
     </main>
   );
 }
+const DEPARTMENT_COLORS = {
+  Operations: "#2563eb",               // Blue
+  Administration: "#22c55e",           // Green
+  Executive: "#7c3aed",                // Purple
+  "Sales & Marketing": "#f59e0b",      // Orange
+  Finance: "#06b6d4",                  // Cyan
+  "Human Resources": "#ef4444",        // Red
+  "Information Technology": "#ec4899", // Pink
+  Other: "#94a3b8",
+};
   return (
 <main className="module-page">
 
@@ -354,7 +432,8 @@ if (error) {
     <div className="chart-container">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
-          <Pie
+          
+<Pie
   data={employeeStatusData}
   dataKey="value"
   nameKey="name"
@@ -369,6 +448,18 @@ if (error) {
       fill={STATUS_COLORS[index % STATUS_COLORS.length]}
     />
   ))}
+
+  <Label
+    value={`${employeeMetrics.totalEmployees}\nEmployees`}
+    position="center"
+    style={{
+      fontSize: 26,
+      fontWeight: 700,
+      fill: "#172033",
+      whiteSpace: "pre-line",
+      textAnchor: "middle",
+    }}
+  />
 </Pie>
 
           <Tooltip />
@@ -381,55 +472,76 @@ if (error) {
   <article className="chart-card">
     <div className="chart-heading">
       <div>
-        <p className="section-label">PAYROLL</p>
-        <h2>Salary Comparison</h2>
+        <p className="section-label">WORKFORCE</p>
+         <h2>Employees by Department</h2>
       </div>
 
-      <span>Annual salary</span>
+      <span>Department distribution</span>
     </div>
 
     <div className="chart-container">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
-          data={salaryChartData}
-          margin={{
-            top: 10,
-            right: 20,
-            left: 10,
-            bottom: 40,
-          }}
-        >
-          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+  data={departmentChartData}
+  layout="vertical"
+  margin={{
+    top: 10,
+    right: 30,
+    left: 35,
+    bottom: 10,
+  }}
+>
+  <CartesianGrid
+    strokeDasharray="3 3"
+    horizontal={false}
+  />
 
-          <XAxis
-            dataKey="name"
-            interval={0}
-            angle={-15}
-            textAnchor="end"
-            height={65}
-            tick={{ fontSize: 12 }}
-          />
+  <XAxis
+    type="number"
+    allowDecimals={false}
+    domain={[0, "dataMax + 1"]}
+  />
 
-          <YAxis
-            tickFormatter={(value) =>
-              `$${Math.round(Number(value) / 1000)}k`
-            }
-          />
+  <YAxis
+    type="category"
+    dataKey="name"
+    width={145}
+    tick={{ fontSize: 12 }}
+  />
 
-          <Tooltip
-            formatter={(value) => [
-              `$${Number(value).toLocaleString()}`,
-              "Annual Salary",
-            ]}
-          />
+  <Tooltip
+    formatter={(value) => [
+      `${value} employee${Number(value) === 1 ? "" : "s"}`,
+      "Employees",
+    ]}
+  />
 
-          <Bar
-            dataKey="salary"
-            name="Annual Salary"
-            fill="#2563eb"
-            radius={[8, 8, 0, 0]}
-          />
-        </BarChart>
+  <Bar
+  dataKey="employees"
+  radius={[0, 8, 8, 0]}
+  barSize={24}
+>
+  {departmentChartData.map((entry) => (
+    <Cell
+      key={entry.name}
+      fill={
+        DEPARTMENT_COLORS[entry.name] ||
+        DEPARTMENT_COLORS.Other
+      }
+    />
+  ))}
+
+  <LabelList
+    dataKey="employees"
+    position="right"
+    style={{
+      fill: "#172033",
+      fontWeight: 700,
+      fontSize: 14,
+    }}
+  />
+</Bar>
+</BarChart>
       </ResponsiveContainer>
     </div>
   </article>

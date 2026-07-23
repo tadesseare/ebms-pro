@@ -3,7 +3,15 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import "./Dashboard.css";
-
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from "recharts";
 export default function Dashboard() {
   const { token, user } = useAuth();
   const navigate = useNavigate();
@@ -106,18 +114,29 @@ const newestEmployee =
   workforce.newestEmployee ??
   "Not available";
 
-const largestDepartment =
+  const mostCommonPosition =
   workforce.largestDepartment?.name ??
   workforce.largestDepartment ??
   "Not available";
 
-  const salesToday = Number(data.salesToday ?? 0);
-  const purchasesToday = Number(data.purchasesToday ?? 0);
-  const profitToday = Number(data.profitToday ?? 0);
-  const inventoryTotal = Number(data.inventoryTotal ?? 0);
-  const weeklyRevenue = Number(data.weeklyRevenue ?? 0);
-  const weeklyQuantity = Number(data.weeklyQuantity ?? 0);
-  // Executive Business Health
+const salesToday = Number(data.salesToday ?? 0);
+const purchasesToday = Number(data.purchasesToday ?? 0);
+const profitToday = Number(data.profitToday ?? 0);
+const inventoryTotal = Number(data.inventoryTotal ?? 0);
+const weeklyRevenue = Number(data.weeklyRevenue ?? 0);
+const weeklyQuantity = Number(data.weeklyQuantity ?? 0);
+
+const lowStock = Array.isArray(data.lowStock)
+  ? data.lowStock
+  : [];
+
+const dailySales = Array.isArray(data.dailySales)
+  ? data.dailySales
+  : [];
+
+const recentActivities = Array.isArray(data.recentActivities)
+  ? data.recentActivities
+  : [];
 
 const healthScore =
   profitToday > 0
@@ -130,21 +149,27 @@ const healthStatus =
   healthScore >= 90
     ? "Excellent"
     : healthScore >= 75
-    ? "Good"
-    : healthScore >= 60
-    ? "Fair"
-    : "Needs Attention";
+      ? "Good"
+      : healthScore >= 60
+        ? "Fair"
+        : "Needs Attention";
 
-  const lowStock = Array.isArray(data.lowStock)
-    ? data.lowStock
-    : [];
-
-  const dailySales = Array.isArray(data.dailySales)
-    ? data.dailySales
-    : [];
-    const recentActivities = Array.isArray(data.recentActivities)
-  ? data.recentActivities
-  : [];
+const dailySalesChart = dailySales.map((item) => ({
+  day: formatDate(
+    item.date ??
+      item.createdAt ??
+      item.day
+  ),
+  quantity: Number(
+    item._sum?.quantity ??
+      item.quantity ??
+      item.totalQuantity ??
+      0
+  ),
+}));
+  //   const recentActivities = Array.isArray(data.recentActivities)
+  // ? data.recentActivities
+  // : [];
 
   const currentDate = new Date().toLocaleDateString(undefined, {
     weekday: "long",
@@ -166,15 +191,15 @@ const healthStatus =
       Enterprise Business Management System
     </p>
 
-    <h1>Business Dashboard</h1>
+   <h1>Executive Business Dashboard</h1>
 
-    <p className="dashboard-welcome">
-      Welcome back to <strong>EBMS PRO</strong>.
-    </p>
+<p className="dashboard-welcome">
+  Welcome back, <strong>{displayName}</strong>.
+</p>
 
-    <p className="dashboard-subtitle">
-      Here's your business overview for today.
-    </p>
+<p className="dashboard-subtitle">
+  Here&apos;s your EBMS PRO business overview for today.
+</p>
 
     <div className="dashboard-meta">
       <span>{currentDate}</span>
@@ -186,7 +211,30 @@ const healthStatus =
       )}
     </div>
   </div>
+<div className="dashboard-highlight-strip">
+  <div>
+    <span>Today&apos;s Profit</span>
+    <strong
+      className={
+        profitToday >= 0
+          ? "highlight-positive"
+          : "highlight-negative"
+      }
+    >
+      {formatCurrency(profitToday)}
+    </strong>
+  </div>
 
+  <div>
+    <span>Low Stock</span>
+    <strong>{formatNumber(lowStock.length)}</strong>
+  </div>
+
+  <div>
+    <span>Business Health</span>
+    <strong>{healthScore}%</strong>
+  </div>
+</div>
   <div className="dashboard-toolbar">
     <div className="live-status">
       <span className="live-dot"></span>
@@ -676,64 +724,65 @@ const healthStatus =
           icon="👤"
         />
 
-        <WorkforceDetail
-          label="Largest Department"
-          value={largestDepartment}
-          icon="🏢"
-        />
+       <WorkforceDetail
+       label="Most Common Position"
+       value={mostCommonPosition}
+       icon="💼"
+     />
       </div>
     </article>
   </div>
 </section>
   
-      <section className="dashboard-section">
-        <DashboardPanel
-          title="Daily Sales for the Last 7 Days"
-          subtitle="Recent sales quantities by date"
-          buttonLabel="Open Sales"
-          onButtonClick={() => navigate("/sales")}
-        >
-          {dailySales.length === 0 ? (
-            <div className="empty-state">
-              <span>📊</span>
-              <p>No sales in the last seven days.</p>
-            </div>
-          ) : (
-            <div className="table-container">
-              <table className="dashboard-table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Quantity Sold</th>
-                  </tr>
-                </thead>
+     <section className="dashboard-section">
+  <DashboardPanel
+    title="Daily Sales for the Last 7 Days"
+    subtitle="Recent sales quantities by date"
+    buttonLabel="Open Sales"
+    onButtonClick={() => navigate("/sales")}
+  >
+    {dailySales.length === 0 ? (
+      <div className="empty-state">
+        <span>📊</span>
+        <p>No sales in the last seven days.</p>
+      </div>
+    ) : (
+      <div className="dashboard-chart-container">
+        <ResponsiveContainer width="100%" height={320}>
+          <AreaChart data={dailySalesChart}>
+            <CartesianGrid
+              strokeDasharray="3 3"
+              vertical={false}
+            />
 
-                <tbody>
-                  {dailySales.map((entry, index) => {
-                    const dateValue =
-                      entry.date ??
-                      entry.createdAt ??
-                      entry.day;
+     <XAxis
+     dataKey="day"
+      tick={{ fontSize: 12 }}
+    />
 
-                    const quantity =
-                      entry._sum?.quantity ??
-                      entry.quantity ??
-                      entry.totalQuantity ??
-                      0;
+    <YAxis
+    allowDecimals={false}
+   />
+            <Tooltip
+              formatter={(value) => [
+                formatNumber(value),
+                "Quantity Sold",
+              ]}
+            />
 
-                    return (
-                      <tr key={`${dateValue ?? "date"}-${index}`}>
-                        <td>{formatDate(dateValue)}</td>
-                        <td>{formatNumber(quantity)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </DashboardPanel>
-      </section>
+            <Area
+              type="monotone"
+              dataKey="quantity"
+              stroke="#2563eb"
+              fill="#bfdbfe"
+              strokeWidth={3}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    )}
+  </DashboardPanel>
+</section>
     </main>
   );
 }

@@ -57,6 +57,7 @@
   align-items: flex-start;
   gap: 16px;
   min-height: 120px;
+  min-width: 0;          /* Add */
   padding: 22px;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
@@ -64,6 +65,11 @@
   box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05);
   cursor: pointer;
   transition: all 0.25s ease;
+  overflow: hidden;      /* Add */
+}
+.module-stat-card > div:last-child {
+  flex: 1;
+  min-width: 0;
 }
 
 .module-stat-card .stat-icon {
@@ -88,7 +94,9 @@
   display: block;
   margin: 6px 0;
   color: #172033;
-  font-size: 28px;
+  font-size: clamp(24px, 2vw, 28px);
+  line-height: 1.1;
+  white-space: nowrap;
 }
 
 .module-stat-card small {

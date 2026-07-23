@@ -11,17 +11,7 @@ import Inventory from "./pages/Inventory";
 import Sales from "./pages/Sales";
 import Purchases from "./pages/Purchase";
 import Reports from "./pages/Reports";
-
-function PlaceholderPage({ title, description }) {
-  return (
-    <section className="placeholder-page">
-      <div>
-        <h1>{title}</h1>
-        <p>{description}</p>
-      </div>
-    </section>
-  );
-}
+import Settings from "./pages/Settings";
 
 export default function App() {
   return (
@@ -32,7 +22,6 @@ export default function App() {
         <Route index element={<Dashboard />} />
 
         <Route path="dashboard" element={<Dashboard />} />
-
         <Route path="employees" element={<Employees />} />
         <Route path="customers" element={<Customers />} />
         <Route path="suppliers" element={<Suppliers />} />
@@ -41,19 +30,13 @@ export default function App() {
         <Route path="sales" element={<Sales />} />
         <Route path="purchases" element={<Purchases />} />
         <Route path="reports" element={<Reports />} />
-
-        <Route
-          path="settings"
-          element={
-            <PlaceholderPage
-              title="⚙️ System Settings"
-              description="System configuration will be added later."
-            />
-          }
-        />
+        <Route path="settings" element={<Settings />} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route
+        path="*"
+        element={<Navigate to="/login" replace />}
+      />
     </Routes>
   );
 }

@@ -11,7 +11,7 @@
   },
 
   "prisma": {
-    "seed": "tsx prisma/seed.s"
+    "seed": "node prisma/seed.js"
   },
 
   "keywords": [],

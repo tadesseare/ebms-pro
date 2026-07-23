@@ -44,7 +44,41 @@ const getPurchaseCost = (purchase) => {
       0
   );
 };
+const buildAverageCostMap = (purchases) => {
+  const totals = new Map();
 
+  purchases.forEach((purchase) => {
+    const productId = Number(purchase.productId);
+    const quantity = Number(purchase.quantity ?? 0);
+    const costPerUnit = getPurchaseCost(purchase);
+
+    const current = totals.get(productId) ?? {
+      totalQuantity: 0,
+      totalCost: 0,
+    };
+
+    current.totalQuantity += quantity;
+    current.totalCost += quantity * costPerUnit;
+
+    totals.set(productId, current);
+  });
+
+  const averageCostMap = new Map();
+
+  totals.forEach((value, productId) => {
+    const averageCost =
+      value.totalQuantity > 0
+        ? value.totalCost / value.totalQuantity
+        : 0;
+
+    averageCostMap.set(productId, averageCost);
+  });
+
+  return averageCostMap;
+};
+
+const roundMoney = (value) =>
+  Number(Number(value ?? 0).toFixed(2));
 /**
  * DASHBOARD SUMMARY
  */
@@ -55,6 +89,7 @@ export const getDashboardSummary = async (req, res) => {
     const [
       dailySales,
       dailyPurchases,
+      allPurchases,
       inventory,
       lowStockCount,
       outOfStockCount,
@@ -82,6 +117,14 @@ export const getDashboardSummary = async (req, res) => {
         },
       }),
 
+      prisma.purchase.findMany({
+        select: {
+          productId: true,
+          quantity: true,
+          costPerUnit: true,
+        },
+      }),
+
       prisma.inventory.findMany({
         include: {
           product: true,
@@ -104,9 +147,11 @@ export const getDashboardSummary = async (req, res) => {
       }),
 
       prisma.sale.count(),
-
       prisma.purchase.count(),
     ]);
+
+    const averageCostMap =
+      buildAverageCostMap(allPurchases);
 
     const dailySalesTotal = dailySales.reduce(
       (sum, sale) =>
@@ -125,33 +170,63 @@ export const getDashboardSummary = async (req, res) => {
         0
       );
 
-    const totalInventoryUnits = inventory.reduce(
-      (sum, item) =>
-        sum + Number(item.quantity),
-      0
-    );
+    const dailyCostOfGoodsSold =
+      dailySales.reduce((sum, sale) => {
+        const averageCost =
+          averageCostMap.get(
+            Number(sale.productId)
+          ) ?? 0;
 
-    const inventoryValue = inventory.reduce(
-      (sum, item) =>
-        sum +
-        Number(item.quantity) *
-          Number(item.product?.price || 0),
-      0
-    );
+        return (
+          sum +
+          Number(sale.quantity) *
+            averageCost
+        );
+      }, 0);
+
+    const totalInventoryUnits =
+      inventory.reduce(
+        (sum, item) =>
+          sum + Number(item.quantity),
+        0
+      );
+
+    const inventoryValue =
+      inventory.reduce((sum, item) => {
+        const averageCost =
+          averageCostMap.get(
+            Number(item.productId)
+          ) ?? 0;
+
+        return (
+          sum +
+          Number(item.quantity) *
+            averageCost
+        );
+      }, 0);
 
     res.json({
-      dailySalesTotal,
-      dailyPurchaseTotal,
-      dailyProfit:
-        dailySalesTotal - dailyPurchaseTotal,
+      dailySalesTotal:
+        roundMoney(dailySalesTotal),
+
+      dailyPurchaseTotal:
+        roundMoney(dailyPurchaseTotal),
+
+      dailyCostOfGoodsSold:
+        roundMoney(dailyCostOfGoodsSold),
+
+      dailyProfit: roundMoney(
+        dailySalesTotal -
+          dailyCostOfGoodsSold
+      ),
 
       inventoryCount: inventory.length,
       totalInventoryUnits,
-      inventoryValue,
+      inventoryValue:
+        roundMoney(inventoryValue),
 
       lowStockCount,
       outOfStockCount,
-
       totalSalesCount,
       totalPurchasesCount,
     });
@@ -396,8 +471,17 @@ export const getProfitReport = async (
           },
         }),
 
-        prisma.purchase.findMany(),
+        prisma.purchase.findMany({
+          select: {
+            productId: true,
+            quantity: true,
+            costPerUnit: true,
+          },
+        }),
       ]);
+
+    const averageCostMap =
+      buildAverageCostMap(purchases);
 
     const revenue = sales.reduce(
       (sum, sale) =>
@@ -407,27 +491,63 @@ export const getProfitReport = async (
       0
     );
 
-    const cost = purchases.reduce(
-      (sum, purchase) =>
-        sum +
-        Number(purchase.quantity) *
-          getPurchaseCost(purchase),
-      0
-    );
+    const purchaseExpenses =
+      purchases.reduce(
+        (sum, purchase) =>
+          sum +
+          Number(purchase.quantity) *
+            getPurchaseCost(purchase),
+        0
+      );
 
-    const profit = revenue - cost;
+    const costOfGoodsSold =
+      sales.reduce((sum, sale) => {
+        const averageCost =
+          averageCostMap.get(
+            Number(sale.productId)
+          ) ?? 0;
 
-    const profitMargin =
+        return (
+          sum +
+          Number(sale.quantity) *
+            averageCost
+        );
+      }, 0);
+
+    const grossProfit =
+      revenue - costOfGoodsSold;
+
+    const grossProfitMargin =
       revenue > 0
-        ? (profit / revenue) * 100
+        ? (grossProfit / revenue) * 100
         : 0;
 
     res.json({
-      revenue,
-      cost,
-      profit,
-      profitMargin,
+      revenue: roundMoney(revenue),
+
+      purchaseExpenses:
+        roundMoney(purchaseExpenses),
+
+      cost: roundMoney(
+        costOfGoodsSold
+      ),
+
+      costOfGoodsSold:
+        roundMoney(costOfGoodsSold),
+
+      profit: roundMoney(grossProfit),
+
+      grossProfit:
+        roundMoney(grossProfit),
+
+      profitMargin:
+        roundMoney(grossProfitMargin),
+
+      grossProfitMargin:
+        roundMoney(grossProfitMargin),
+
       salesTransactions: sales.length,
+
       purchaseTransactions:
         purchases.length,
     });
