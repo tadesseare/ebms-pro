@@ -295,7 +295,7 @@ const inventoryValue = inventory.reduce(
   ).length;
 
  return (
-  <div className="module-page">
+  <div className="module-page inventory-page">
     <section className="inventory-header">
       <div className="inventory-header-content">
         <p className="inventory-eyebrow">
@@ -428,13 +428,10 @@ const inventoryValue = inventory.reduce(
             </select>
           </div>
 
-         <button
-       type="button"
-       className="primary-button"
-       onClick={openAddModal}
->
-       + Add Product to Inventory
-      </button>
+        <span>
+  {filteredInventory.length}{" "}
+  {filteredInventory.length === 1 ? "record" : "records"}
+</span>
         </div>
 
         <div className="module-table-wrapper">

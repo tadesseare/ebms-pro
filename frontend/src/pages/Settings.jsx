@@ -534,7 +534,11 @@ export default function Settings() {
             </strong>
 
             <p>
-              Save your changes before leaving this page.
+              <p>
+           {hasUnsavedChanges
+                ? "Save your changes before leaving this page."
+                : "No unsaved changes are pending."}
+           </p>
             </p>
           </div>
 

@@ -18,7 +18,7 @@ const emptyForm = {
   quantity: 1,
   costPerUnit: "",
 };
-
+const PURCHASES_PER_PAGE = 20;
 export default function Purchases() {
   const token = localStorage.getItem("token");
 
@@ -35,6 +35,7 @@ export default function Purchases() {
     useState(false);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] =
     useState(false);
@@ -316,7 +317,33 @@ export default function Purchases() {
       );
     });
   }, [purchases, searchTerm]);
+const totalPages = Math.max(
+  1,
+  Math.ceil(
+    filteredPurchases.length /
+      PURCHASES_PER_PAGE
+  )
+);
 
+const firstPurchaseIndex =
+  (currentPage - 1) * PURCHASES_PER_PAGE;
+
+const paginatedPurchases =
+  filteredPurchases.slice(
+    firstPurchaseIndex,
+    firstPurchaseIndex +
+      PURCHASES_PER_PAGE
+  );
+
+useEffect(() => {
+  setCurrentPage(1);
+}, [searchTerm]);
+
+useEffect(() => {
+  setCurrentPage((page) =>
+    Math.min(page, totalPages)
+  );
+}, [totalPages]);
   const totalPurchaseCost = purchases.reduce(
     (sum, purchase) =>
       sum +
@@ -364,7 +391,7 @@ export default function Purchases() {
     );
 
   return (
-    <div className="module-page">
+    <div className="module-page purchases-page">
       <div className="module-header">
         <div>
           <h1>🧾 Purchase Management</h1>
@@ -502,8 +529,8 @@ export default function Purchases() {
               </thead>
 
               <tbody>
-                {filteredPurchases.map(
-                  (purchase) => {
+                {paginatedPurchases.map(
+                (purchase) => {
                     const total =
                       Number(
                         purchase.quantity
@@ -589,9 +616,69 @@ export default function Purchases() {
             </table>
           )}
         </div>
+        {!loading &&
+          filteredPurchases.length > 0 && (
+            <div className="module-pagination">
+              <div className="pagination-summary">
+                Showing{" "}
+                <strong>
+                  {firstPurchaseIndex + 1}
+                </strong>{" "}
+                to{" "}
+                <strong>
+                  {Math.min(
+                    firstPurchaseIndex +
+                      PURCHASES_PER_PAGE,
+                    filteredPurchases.length
+                  )}
+                </strong>{" "}
+                of{" "}
+                <strong>
+                  {filteredPurchases.length}
+                </strong>{" "}
+                purchases
+              </div>
+
+              <div className="pagination-controls">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCurrentPage((page) =>
+                      Math.max(page - 1, 1)
+                    )
+                  }
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </button>
+
+                <span>
+                  Page {currentPage} of{" "}
+                  {totalPages}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCurrentPage((page) =>
+                      Math.min(
+                        page + 1,
+                        totalPages
+                      )
+                    )
+                  }
+                  disabled={
+                    currentPage === totalPages
+                  }
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
       </div>
 
-      <Modal
+        <Modal
         isOpen={showPurchaseModal}
         title="Record New Purchase"
         onClose={closePurchaseModal}

@@ -348,7 +348,7 @@
 }
 
 .settings-actions {
-  position: sticky;
+  position: static;
   bottom: 18px;
   z-index: 20;
   display: flex;
@@ -359,10 +359,9 @@
   margin-top: 28px;
   border: 1px solid #dbe3ef;
   border-radius: 16px;
-  background: rgb(255 255 255 / 96%);
+  background: #ffffff;
   box-shadow: 0 14px 36px rgb(15 23 42 / 14%);
-  backdrop-filter: blur(12px);
-}
+ }
 
 .settings-actions strong {
   color: #0f172a;

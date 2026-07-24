@@ -43,7 +43,7 @@ const fetchEmployees = async () => {
     setLoading(true);
     setError("");
 
-    const response = await api.get("/api/employees");
+    const response = await api.get("/employees");
 
     setEmployees(response.data);
   } catch (error) {
@@ -249,7 +249,7 @@ const openEditForm = (employee) => {
   try {
     if (editingId !== null) {
       const response = await api.put(
-        `/api/employees/${editingId}`,
+        `/employees/${editingId}`,
         employeeData
       );
 
@@ -260,7 +260,7 @@ const openEditForm = (employee) => {
       );
     } else {
       const response = await api.post(
-        "/api/employees",
+        "/employees",
         employeeData
       );
 
@@ -287,7 +287,7 @@ const handleDelete = async (id) => {
   if (!confirmed) return;
 
   try {
-    await api.delete(`/api/employees/${id}`);
+    await api.delete(`/employees/${id}`);
 
     setEmployees((previous) =>
       previous.filter((employee) => employee.id !== id)

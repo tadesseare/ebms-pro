@@ -19,7 +19,6 @@ import {
 import { useAuth } from "../context/AuthContext";
 import "../styles/ModulePage.css";
 import "./Reports.css";
-const response = await api.get(API_URL);
 
 const EMPTY_SUMMARY = {
   dailySalesTotal: 0,
@@ -723,8 +722,9 @@ const printReport = () => {
 
       <section className="stats-grid">
         <article className="stat-card">
-          <div className="stat-card-icon">💰</div>
-          <div>
+     <div className="stat-card-icon">💰</div>
+
+     <div className="stat-card-content">
             <span className="stat-card-label">
               Total Revenue
             </span>
@@ -741,8 +741,9 @@ const printReport = () => {
         </article>
 
         <article className="stat-card">
-          <div className="stat-card-icon">💳</div>
-          <div>
+  <div className="stat-card-icon">💰</div>
+
+  <div className="stat-card-content">
             <span className="stat-card-label">
               Total Expenses
             </span>
@@ -1464,9 +1465,8 @@ const printReport = () => {
                         <td>#{item.id}</td>
                         <td>
                           <strong>
-                            {item.product?.name ||
-                              "Unknown product"}
-                          </strong>
+                         {item.product?.name || "Unknown product"}
+                         </strong>
                         </td>
                         <td>
                           {formatNumber(

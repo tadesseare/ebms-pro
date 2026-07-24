@@ -231,22 +231,30 @@ export default function Products() {
   ).size;
 
   return (
-    <div className="module-page">
-      <div className="module-header">
-        <div>
-          <h1>📦 Product Management</h1>
+    <div className="module-page products-page">
+      <div className="module-page-header">
+  <div>
+    <h1>📦 Product Management</h1>
 
-          <p>
-            Manage products, pricing, supplier relationships, and
-            product catalog.
-          </p>
-        </div>
+    <p>
+      Manage products, pricing, supplier relationships, and
+      product catalog.
+    </p>
 
-        <div className="live-indicator">
-          <span className="live-dot"></span>
-          Live Data
-        </div>
-      </div>
+    <div className="live-data-badge">
+      <span className="live-data-dot"></span>
+      Live Data
+    </div>
+  </div>
+
+  <button
+    type="button"
+    className="primary-button"
+    onClick={openAddModal}
+  >
+    + Add Product
+  </button>
+</div>
 
       <div className="module-stat-grid">
         <div className="module-stat-card">
@@ -301,13 +309,10 @@ export default function Products() {
             onChange={(event) => setSearchTerm(event.target.value)}
           />
 
-          <button
-            type="button"
-            className="primary-button"
-            onClick={openAddModal}
-          >
-            + Add Product
-          </button>
+         <span>
+  {filteredProducts.length}{" "}
+  {filteredProducts.length === 1 ? "record" : "records"}
+</span>
         </div>
 
         <div className="module-table-wrapper">

@@ -1,5 +1,3 @@
-
-
 import { useEffect, useMemo, useState } from "react";
 import api from "../api/api";
 import Modal from "../components/Modal";
@@ -11,7 +9,7 @@ const emptyForm = {
   email: "",
 };
 
- export default function Customers() {
+export default function Customers() {
   const token = localStorage.getItem("token");
 
   const [customers, setCustomers] = useState([]);
@@ -24,15 +22,12 @@ const emptyForm = {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const requestConfig = {
-     };
   const fetchCustomers = async () => {
     try {
       setLoading(true);
       setError("");
 
-      const response = await api.get("/api/customers", requestConfig
-    );
+      const response = await api.get("/customers");
 
       setCustomers(
         Array.isArray(response.data)
@@ -53,14 +48,14 @@ const emptyForm = {
     }
   };
 
-useEffect(() => {
-  if (token) {
-    fetchCustomers();
-  } else {
-    setLoading(false);
-    setError("Please log in first.");
-  }
-}, [token]);
+  useEffect(() => {
+    if (token) {
+      fetchCustomers();
+    } else {
+      setLoading(false);
+      setError("Please log in first.");
+    }
+  }, [token]);
 
   const resetForm = () => {
     setForm(emptyForm);
@@ -115,15 +110,10 @@ useEffect(() => {
       setSaving(true);
       setError("");
 
-      if (editingId) {
-        await api.put(
-          `/api/customers/${editingId}`,
-          payload,
-          requestConfig
-        );
+      if (editingId !== null) {
+        await api.put(`/customers/${editingId}`, payload);
       } else {
-        await api.post("/api/customers", payload, requestConfig
-      );
+        await api.post("/customers", payload);
       }
 
       closeFormModal();
@@ -152,10 +142,8 @@ useEffect(() => {
     try {
       setError("");
 
-      await api.delete(
-        `/api/customers/${customer.id}`,
-        requestConfig
-      );
+      await api.delete(`/customers/${customer.id}`);
+      
 
       await fetchCustomers();
     } catch (err) {
@@ -193,7 +181,7 @@ useEffect(() => {
   ).length;
 
   return (
-    <div className="module-page">
+    <div className="module-page customers-page">
       <div className="module-page-header">
         <div>
           <h1>👤 Customer Management</h1>

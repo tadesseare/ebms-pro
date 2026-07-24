@@ -21,24 +21,22 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchDashboard = useCallback(
-    async (showRefreshing = false) => {
-      try {
-        if (showRefreshing) {
-          setRefreshing(true);
-        } else {
-          setLoading(true);
-        }
+ const fetchDashboard = useCallback(
+  async (showRefreshing = false) => {
+    try {
+      if (showRefreshing) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
 
-        setError("");
+      setError("");
 
-        const response = await api.get("/api/dashboard/stats", {
-         
-        });
+      const response = await api.get("/dashboard/stats");
 
-        setData(response.data);
-      } catch (err) {
-        console.error("Dashboard error:", err);
+      setData(response.data);
+    } catch (err) {
+      console.error("Dashboard error:", err);
 
         const message =
           err.response?.data?.error ||

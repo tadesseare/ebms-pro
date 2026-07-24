@@ -12,10 +12,10 @@ const emptyForm = {
   customerId: "",
   quantity: 1,
 };
-
+const SALES_PER_PAGE = 20;
 export default function Sales() {
   const token = localStorage.getItem("token");
-
+  const authConfig = {};
   const [sales, setSales] = useState([]);
   const [products, setProducts] = useState([]);
   const [customers, setCustomers] = useState([]);
@@ -25,12 +25,13 @@ export default function Sales() {
   const [selectedSale, setSelectedSale] = useState(null);
   const [showSaleModal, setShowSaleModal] = useState(false);
 
+ 
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-
 
   const loadSales = async () => {
   const response = await api.get(SALES_URL);
@@ -278,7 +279,30 @@ const loadInventory = async () => {
       );
     });
   }, [sales, searchTerm]);
+const totalPages = Math.max(
+  1,
+  Math.ceil(
+    filteredSales.length / SALES_PER_PAGE
+  )
+);
 
+const firstSaleIndex =
+  (currentPage - 1) * SALES_PER_PAGE;
+
+const paginatedSales = filteredSales.slice(
+  firstSaleIndex,
+  firstSaleIndex + SALES_PER_PAGE
+);
+
+useEffect(() => {
+  setCurrentPage(1);
+}, [searchTerm]);
+
+useEffect(() => {
+  setCurrentPage((page) =>
+    Math.min(page, totalPages)
+  );
+}, [totalPages]);
   const totalRevenue = sales.reduce(
     (sum, sale) =>
       sum +
@@ -318,7 +342,7 @@ const loadInventory = async () => {
     });
 
   return (
-    <div className="module-page">
+   <div className="module-page sales-page">
       <div className="module-header">
         <div>
           <h1>🛒 Sales Management</h1>
@@ -357,7 +381,7 @@ const loadInventory = async () => {
             <small>Revenue from all sales</small>
           </div>
         </div>
-F
+
         <div className="module-stat-card">
           <div className="stat-icon">📦</div>
 
@@ -452,7 +476,7 @@ F
               </thead>
 
               <tbody>
-                {filteredSales.map((sale) => {
+                {paginatedSales.map((sale) => {
                   const total =
                     Number(sale.quantity) *
                     Number(sale.pricePerUnit);
@@ -523,8 +547,66 @@ F
             </table>
           )}
         </div>
+        {!loading && filteredSales.length > 0 && (
+          <div className="module-pagination">
+            <div className="pagination-summary">
+              Showing{" "}
+              <strong>
+                {firstSaleIndex + 1}
+              </strong>{" "}
+              to{" "}
+              <strong>
+                {Math.min(
+                  firstSaleIndex + SALES_PER_PAGE,
+                  filteredSales.length
+                )}
+              </strong>{" "}
+              of{" "}
+              <strong>
+                {filteredSales.length}
+              </strong>{" "}
+              sales
+            </div>
+
+            <div className="pagination-controls">
+              <button
+                type="button"
+                onClick={() =>
+                  setCurrentPage((page) =>
+                    Math.max(page - 1, 1)
+                  )
+                }
+                disabled={currentPage === 1}
+              >
+                Previous
+              </button>
+
+              <span>
+                Page {currentPage} of {totalPages}
+              </span>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setCurrentPage((page) =>
+                    Math.min(
+                      page + 1,
+                      totalPages
+                    )
+                  )
+                }
+                disabled={
+                  currentPage === totalPages
+                }
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
+      
       <Modal
         isOpen={showSaleModal}
         title="Create New Sale"

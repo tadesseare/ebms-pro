@@ -33,8 +33,8 @@ export default function Suppliers() {
       setError("");
 
       const response = await api.get(
-        "/api/suppliers",
-        requestConfig
+        "/suppliers",
+        
       );
 
       setSuppliers(
@@ -120,13 +120,13 @@ export default function Suppliers() {
 
       if (editingId) {
         await api.put(
-          `/api/suppliers/${editingId}`,
+          `/suppliers/${editingId}`,
           payload,
           requestConfig
         );
       } else {
         await api.post(
-          "/api/suppliers",
+          "/suppliers",
           payload,
           requestConfig
         );
@@ -158,10 +158,9 @@ export default function Suppliers() {
     try {
       setError("");
 
-      await axios.delete(
-        `/api/suppliers/${supplier.id}`,
-        requestConfig
-      );
+    await api.delete(
+  `/suppliers/${supplier.id}`
+);
 
       await fetchSuppliers();
     } catch (err) {
@@ -199,7 +198,7 @@ export default function Suppliers() {
   ).length;
 
   return (
-    <div className="module-page">
+    <div className="module-page suppliers-page">
       <div className="module-page-header">
         <div>
           <h1>🚚 Supplier Management</h1>
