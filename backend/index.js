@@ -15,23 +15,38 @@ import inventoryRoutes from "./routes/inventory.routes.js";
 import salesRoutes from "./routes/sales.routes.js";
 import purchaseRoutes from "./routes/purchase.routes.js";
 import reportsRoutes from "./routes/reports.routes.js";
+
 const app = express();
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  process.env.FRONTEND_URL,
+].filter(Boolean);
 
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:5174",
-    ],
+    origin(origin, callback) {
+      // Allow requests without a browser origin, such as health checks.
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error("Origin not allowed by CORS"));
+    },
     credentials: true,
   })
 );
 
 app.use(express.json());
 
-// Test route
+// Backend health check
 app.get("/", (req, res) => {
-  res.send("EBMS Backend is Running!");
+  res.status(200).json({
+    message: "EBMS Backend is Running!",
+    status: "healthy",
+  });
 });
 
 // Mount routes
@@ -46,9 +61,27 @@ app.use("/api/sales", salesRoutes);
 app.use("/api/purchases", purchaseRoutes);
 app.use("/api/reports", reportsRoutes);
 
+// Unknown API route
+app.use("/api", (req, res) => {
+  res.status(404).json({
+    message: "API endpoint not found.",
+  });
+});
+
+// General error handler
+app.use((error, req, res, next) => {
+  console.error("SERVER ERROR:", error);
+
+  res.status(500).json({
+    message: "An unexpected server error occurred.",
+  });
+});
+
 const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, "127.0.0.1", () => {
-  console.log(`Backend running on http://127.0.0.1:${PORT}`);
+
+// Do not bind exclusively to 127.0.0.1 in production.
+const server = app.listen(PORT, () => {
+  console.log(`Backend running on port ${PORT}`);
 });
 
 server.on("error", (error) => {

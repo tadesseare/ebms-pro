@@ -7,132 +7,97 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// =========================
-// ENUMS
-// =========================
-
-enum Role {
-  admin
-  manager
-  staff
-}
-
-// =========================
-// USER (Authentication)
-// =========================
-
-model User {
+model customer {
   id        Int      @id @default(autoincrement())
   name      String
-  email     String   @unique
-  password  String
-  role      Role
+  email     String?
+  phone     String?
   createdAt DateTime @default(now())
+  sale      sale[]
 }
 
-
-// =========================
-// EMPLOYEES
-// =========================
-
-model Employee {
+model employee {
   id        Int      @id @default(autoincrement())
   name      String
   email     String?
   phone     String?
   position  String?
   salary    Float?
+  createdAt DateTime @default(now())
   status    String   @default("Active")
-  createdAt DateTime @default(now())
 }
 
-// =========================
-// CUSTOMERS
-// =========================
-
-model Customer {
+model inventory {
   id        Int      @id @default(autoincrement())
-  name      String
-  email     String?
-  phone     String?
+  productId Int      @unique(map: "Inventory_productId_key")
+  quantity  Int      @default(0)
   createdAt DateTime @default(now())
-
-  sales     Sale[]
+  product   product  @relation(fields: [productId], references: [id], map: "Inventory_productId_fkey")
 }
 
-// =========================
-// SUPPLIERS
-// =========================
-
-model Supplier {
-  id        Int      @id @default(autoincrement())
-  name      String
-  contact   String?
-  phone     String?
-  createdAt DateTime @default(now())
-
-  products  Product[]
-  purchases Purchase[]
-}
-
-// =========================
-// PRODUCTS
-// =========================
-
-model Product {
+model product {
   id         Int        @id @default(autoincrement())
   name       String
   price      Float
   supplierId Int
   createdAt  DateTime   @default(now())
+  inventory  inventory?
+  supplier   supplier   @relation(fields: [supplierId], references: [id], map: "Product_supplierId_fkey")
+  purchase   purchase[]
+  sale       sale[]
 
-  supplier   Supplier   @relation(fields: [supplierId], references: [id])
-  inventory  Inventory?
-  purchases  Purchase[]
-  sales      Sale[]
+  @@index([supplierId], map: "Product_supplierId_fkey")
 }
 
-// =========================
-// INVENTORY
-// =========================
-
-model Inventory {
-  id        Int      @id @default(autoincrement())
-  productId Int      @unique
-  quantity  Int      @default(0)
-  createdAt DateTime @default(now())
-
-  product   Product  @relation(fields: [productId], references: [id])
-}
-
-// =========================
-// PURCHASES
-// =========================
-
-model Purchase {
+model purchase {
   id          Int      @id @default(autoincrement())
   productId   Int
   supplierId  Int
   quantity    Int
   costPerUnit Float
   createdAt   DateTime @default(now())
+  product     product  @relation(fields: [productId], references: [id], map: "Purchase_productId_fkey")
+  supplier    supplier @relation(fields: [supplierId], references: [id], map: "Purchase_supplierId_fkey")
 
-  product     Product  @relation(fields: [productId], references: [id])
-  supplier    Supplier @relation(fields: [supplierId], references: [id])
+  @@index([productId], map: "Purchase_productId_fkey")
+  @@index([supplierId], map: "Purchase_supplierId_fkey")
 }
 
-// =========================
-// SALES
-// =========================
-
-model Sale {
+model sale {
   id           Int      @id @default(autoincrement())
   productId    Int
   customerId   Int
   quantity     Int
   pricePerUnit Float
   createdAt    DateTime @default(now())
+  customer     customer @relation(fields: [customerId], references: [id], map: "Sale_customerId_fkey")
+  product      product  @relation(fields: [productId], references: [id], map: "Sale_productId_fkey")
 
-  product      Product  @relation(fields: [productId], references: [id])
-  customer     Customer @relation(fields: [customerId], references: [id])
+  @@index([customerId], map: "Sale_customerId_fkey")
+  @@index([productId], map: "Sale_productId_fkey")
+}
+
+model supplier {
+  id        Int        @id @default(autoincrement())
+  name      String
+  contact   String?
+  phone     String?
+  createdAt DateTime   @default(now())
+  product   product[]
+  purchase  purchase[]
+}
+
+model user {
+  id        Int       @id @default(autoincrement())
+  name      String
+  email     String    @unique(map: "User_email_key")
+  password  String
+  role      user_role
+  createdAt DateTime  @default(now())
+}
+
+enum user_role {
+  admin
+  manager
+  staff
 }
