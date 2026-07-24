@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import axios from "axios";
+import api from "../api/api";
 import Modal from "../components/Modal";
 import "../styles/ModulePage.css";
 
@@ -25,17 +25,14 @@ export default function Suppliers() {
   const [error, setError] = useState("");
 
   const requestConfig = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
+     };
 
   const fetchSuppliers = async () => {
     try {
       setLoading(true);
       setError("");
 
-      const response = await axios.get(
+      const response = await api.get(
         "/api/suppliers",
         requestConfig
       );
@@ -122,13 +119,13 @@ export default function Suppliers() {
       setError("");
 
       if (editingId) {
-        await axios.put(
+        await api.put(
           `/api/suppliers/${editingId}`,
           payload,
           requestConfig
         );
       } else {
-        await axios.post(
+        await api.post(
           "/api/suppliers",
           payload,
           requestConfig

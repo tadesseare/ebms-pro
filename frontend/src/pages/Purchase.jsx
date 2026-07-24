@@ -3,21 +3,14 @@ import {
   useMemo,
   useState,
 } from "react";
-import axios from "axios";
+import api from "../api/api";
 import Modal from "../components/Modal";
 import "../styles/ModulePage.css";
 
-const PURCHASES_URL =
-  "http://127.0.0.1:5000/api/purchases";
-
-const PRODUCTS_URL =
-  "http://127.0.0.1:5000/api/products";
-
-const SUPPLIERS_URL =
-  "http://127.0.0.1:5000/api/suppliers";
-
-const INVENTORY_URL =
-  "http://127.0.0.1:5000/api/inventory";
+const PURCHASES_URL = "/purchases";
+const PRODUCTS_URL = "/products";
+const SUPPLIERS_URL = "/suppliers";
+const INVENTORY_URL = "/inventory";
 
 const emptyForm = {
   productId: "",
@@ -50,13 +43,11 @@ export default function Purchases() {
   const [success, setSuccess] = useState("");
 
   const authConfig = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+   
   };
 
   const loadPurchases = async () => {
-    const response = await axios.get(
+    const response = await api.get(
       PURCHASES_URL,
       authConfig
     );
@@ -69,7 +60,7 @@ export default function Purchases() {
   };
 
   const loadProducts = async () => {
-    const response = await axios.get(
+    const response = await api.get(
       PRODUCTS_URL,
       authConfig
     );
@@ -82,7 +73,7 @@ export default function Purchases() {
   };
 
   const loadSuppliers = async () => {
-    const response = await axios.get(
+    const response = await api.get(
       SUPPLIERS_URL,
       authConfig
     );
@@ -95,7 +86,7 @@ export default function Purchases() {
   };
 
   const loadInventory = async () => {
-    const response = await axios.get(
+    const response = await api.get(
       INVENTORY_URL,
       authConfig
     );
@@ -235,7 +226,7 @@ export default function Purchases() {
       setError("");
       setSuccess("");
 
-      await axios.post(
+      await api.post(
         PURCHASES_URL,
         payload,
         authConfig
@@ -279,7 +270,7 @@ export default function Purchases() {
       setError("");
       setSuccess("");
 
-      await axios.delete(
+      await api.delete(
         `${PURCHASES_URL}/${purchase.id}`,
         authConfig
       );

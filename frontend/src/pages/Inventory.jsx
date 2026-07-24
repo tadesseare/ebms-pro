@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/api";
+
 import Modal from "../components/Modal";
 import "../styles/ModulePage.css";
 import "./Inventory.css";
 
-const INVENTORY_URL = "http://127.0.0.1:5000/api/inventory";
-const PRODUCTS_URL = "http://127.0.0.1:5000/api/products";
+
+const INVENTORY_URL = "/inventory";
+const PRODUCTS_URL = "/products";
 
 export default function Inventory() {
   const [inventory, setInventory] = useState([]);
@@ -31,9 +33,7 @@ export default function Inventory() {
   const token = localStorage.getItem("token");
 
   const authConfig = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+   
   };
 
   const loadInventory = async () => {
@@ -41,7 +41,7 @@ export default function Inventory() {
       setLoading(true);
       setError("");
 
-      const response = await axios.get(INVENTORY_URL, authConfig);
+      const response = await api.get(INVENTORY_URL, authConfig);
 
       setInventory(
         Array.isArray(response.data) ? response.data : []
@@ -61,7 +61,7 @@ export default function Inventory() {
 
   const loadProducts = async () => {
     try {
-      const response = await axios.get(PRODUCTS_URL, authConfig);
+      const response = await api.get(PRODUCTS_URL, authConfig);
 
       setProducts(
         Array.isArray(response.data) ? response.data : []
@@ -161,13 +161,13 @@ export default function Inventory() {
       setError("");
 
       if (editingId !== null) {
-        await axios.put(
+        await api.put(
           `${INVENTORY_URL}/${editingId}`,
           payload,
           authConfig
         );
       } else {
-        await axios.post(
+        await api.post(
           INVENTORY_URL,
           payload,
           authConfig
@@ -202,7 +202,7 @@ export default function Inventory() {
     try {
       setError("");
 
-      await axios.delete(
+      await api.delete(
         `${INVENTORY_URL}/${item.id}`,
         authConfig
       );

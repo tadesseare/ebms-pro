@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../api/api";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "./Login.css";
@@ -26,50 +26,44 @@ export default function Login() {
       return;
     }
 
-    try {
-      setLoading(true);
+  try {
+  setLoading(true);
 
-      const res = await axios.post(
-        "http://127.0.0.1:5000/api/auth/login",
-        {
-          email: normalizedEmail,
-          password: password.trim(),
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+  const res = await api.post("/auth/login", {
+    email: normalizedEmail,
+    password: password.trim(),
+  });
 
-      if (!res.data?.token || !res.data?.user) {
-        setError("The server returned an invalid login response.");
-        return;
-      }
+  if (!res.data?.token || !res.data?.user) {
+    setError("The server returned an invalid login response.");
+    return;
+  }
 
-      login(res.data.user, res.data.token);
+  login(res.data.user, res.data.token);
 
-      if (rememberMe) {
-        localStorage.setItem("ebmsRememberedEmail", normalizedEmail);
-      } else {
-        localStorage.removeItem("ebmsRememberedEmail");
-      }
+  if (rememberMe) {
+    localStorage.setItem(
+      "ebmsRememberedEmail",
+      normalizedEmail
+    );
+  } else {
+    localStorage.removeItem("ebmsRememberedEmail");
+  }
 
-      navigate("/");
-    } catch (err) {
-      console.error("Login error:", err);
+  navigate("/");
+} catch (err) {
+  console.error("Login error:", err);
 
-      const message =
-        err.response?.data?.message ||
-        err.response?.data?.error ||
-        "Unable to sign in. Please check your credentials and try again.";
+  const message =
+    err.response?.data?.message ||
+    err.response?.data?.error ||
+    "Unable to sign in. Please check your credentials and try again.";
 
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  setError(message);
+} finally {
+  setLoading(false);
+}
+}
   return (
     <main className="login-page">
       <section className="login-shell">

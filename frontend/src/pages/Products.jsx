@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/api";
 import Modal from "../components/Modal";
 import "../styles/ModulePage.css";
 
-const API_URL = "http://127.0.0.1:5000/api/products";
-const SUPPLIERS_URL = "http://127.0.0.1:5000/api/suppliers";
+
+const API_URL = "/products";
+const SUPPLIERS_URL = "/suppliers";
 
 export default function Products() {
   const [products, setProducts] = useState([]);
@@ -28,9 +29,7 @@ export default function Products() {
   const token = localStorage.getItem("token");
 
   const authConfig = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+   
   };
 
   const loadProducts = async () => {
@@ -38,7 +37,7 @@ export default function Products() {
       setLoading(true);
       setError("");
 
-      const response = await axios.get(API_URL, authConfig);
+      const response = await api.get(API_URL, authConfig);
 
       setProducts(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
@@ -57,7 +56,7 @@ export default function Products() {
 
   const loadSuppliers = async () => {
     try {
-      const response = await axios.get(SUPPLIERS_URL, authConfig);
+      const response = await api.get(SUPPLIERS_URL, authConfig);
 
       setSuppliers(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
@@ -135,13 +134,13 @@ export default function Products() {
       setError("");
 
       if (editingId !== null) {
-        await axios.put(
+        await api.put(
           `${API_URL}/${editingId}`,
           payload,
           authConfig
         );
       } else {
-        await axios.post(API_URL, payload, authConfig);
+        await api.post(API_URL, payload, authConfig);
       }
 
       await loadProducts();
@@ -182,7 +181,7 @@ export default function Products() {
     try {
       setError("");
 
-      await axios.delete(`${API_URL}/${product.id}`, authConfig);
+      await api.delete(`${API_URL}/${product.id}`, authConfig);
       await loadProducts();
     } catch (err) {
       console.error("DELETE PRODUCT ERROR:", err);

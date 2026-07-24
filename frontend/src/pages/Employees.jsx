@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import axios from "axios";
+import api from "../api/api";
 import Modal from "../components/Modal";
 import {
   PieChart,
@@ -43,7 +43,7 @@ const fetchEmployees = async () => {
     setLoading(true);
     setError("");
 
-    const response = await axios.get("/api/employees");
+    const response = await api.get("/api/employees");
 
     setEmployees(response.data);
   } catch (error) {
@@ -248,7 +248,7 @@ const openEditForm = (employee) => {
 
   try {
     if (editingId !== null) {
-      const response = await axios.put(
+      const response = await api.put(
         `/api/employees/${editingId}`,
         employeeData
       );
@@ -259,7 +259,7 @@ const openEditForm = (employee) => {
         )
       );
     } else {
-      const response = await axios.post(
+      const response = await api.post(
         "/api/employees",
         employeeData
       );
@@ -287,7 +287,7 @@ const handleDelete = async (id) => {
   if (!confirmed) return;
 
   try {
-    await axios.delete(`/api/employees/${id}`);
+    await api.delete(`/api/employees/${id}`);
 
     setEmployees((previous) =>
       previous.filter((employee) => employee.id !== id)

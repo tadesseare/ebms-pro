@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import axios from "axios";
+import api from "../api/api";
+
+const API_URL = "/reports";
 import {
   Bar,
   BarChart,
@@ -17,8 +19,7 @@ import {
 import { useAuth } from "../context/AuthContext";
 import "../styles/ModulePage.css";
 import "./Reports.css";
-
-const API_URL = "http://127.0.0.1:5000/api/reports";
+const response = await api.get(API_URL);
 
 const EMPTY_SUMMARY = {
   dailySalesTotal: 0,
@@ -186,27 +187,27 @@ const profitColor =
           inventoryResponse,
           lowStockResponse,
         ] = await Promise.all([
-          axios.get(`${API_URL}/dashboard-summary`, {
+          api.get(`${API_URL}/dashboard-summary`, {
             headers: authHeaders,
           }),
 
-          axios.get(`${API_URL}/profit`, {
+          api.get(`${API_URL}/profit`, {
             headers: authHeaders,
           }),
 
-          axios.get(`${API_URL}/sales/daily`, {
+          api.get(`${API_URL}/sales/daily`, {
             headers: authHeaders,
           }),
 
-          axios.get(`${API_URL}/purchases/daily`, {
+          api.get(`${API_URL}/purchases/daily`, {
             headers: authHeaders,
           }),
 
-          axios.get(`${API_URL}/inventory/summary`, {
+          api.get(`${API_URL}/inventory/summary`, {
             headers: authHeaders,
           }),
 
-          axios.get(`${API_URL}/inventory/low-stock`, {
+          api.get(`${API_URL}/inventory/low-stock`, {
             headers: authHeaders,
           }),
         ]);

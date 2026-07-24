@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import axios from "axios";
+import api from "../api/api";
 import Modal from "../components/Modal";
 import "../styles/ModulePage.css";
 
-const SALES_URL = "http://127.0.0.1:5000/api/sales";
-const PRODUCTS_URL = "http://127.0.0.1:5000/api/products";
-const CUSTOMERS_URL = "http://127.0.0.1:5000/api/customers";
-const INVENTORY_URL = "http://127.0.0.1:5000/api/inventory";
-
+const SALES_URL = "/sales";
+const PRODUCTS_URL = "/products";
+const CUSTOMERS_URL = "/customers";
+const INVENTORY_URL = "/inventory";
 const emptyForm = {
   productId: "",
   customerId: "",
@@ -32,43 +31,38 @@ export default function Sales() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const authConfig = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
 
   const loadSales = async () => {
-    const response = await axios.get(SALES_URL, authConfig);
+  const response = await api.get(SALES_URL);
 
-    setSales(
-      Array.isArray(response.data) ? response.data : []
-    );
-  };
+  setSales(
+    Array.isArray(response.data) ? response.data : []
+  );
+};
 
-  const loadProducts = async () => {
-    const response = await axios.get(PRODUCTS_URL, authConfig);
+const loadProducts = async () => {
+  const response = await api.get(PRODUCTS_URL);
 
-    setProducts(
-      Array.isArray(response.data) ? response.data : []
-    );
-  };
+  setProducts(
+    Array.isArray(response.data) ? response.data : []
+  );
+};
 
-  const loadCustomers = async () => {
-    const response = await axios.get(CUSTOMERS_URL, authConfig);
+const loadCustomers = async () => {
+  const response = await api.get(CUSTOMERS_URL);
 
-    setCustomers(
-      Array.isArray(response.data) ? response.data : []
-    );
-  };
+  setCustomers(
+    Array.isArray(response.data) ? response.data : []
+  );
+};
 
-  const loadInventory = async () => {
-    const response = await axios.get(INVENTORY_URL, authConfig);
+const loadInventory = async () => {
+  const response = await api.get(INVENTORY_URL);
 
-    setInventory(
-      Array.isArray(response.data) ? response.data : []
-    );
-  };
+  setInventory(
+    Array.isArray(response.data) ? response.data : []
+  );
+};
 
   const loadPageData = async () => {
     try {
@@ -203,7 +197,7 @@ export default function Sales() {
       setError("");
       setSuccess("");
 
-      await axios.post(
+      await api.post(
         SALES_URL,
         payload,
         authConfig
@@ -242,7 +236,7 @@ export default function Sales() {
       setError("");
       setSuccess("");
 
-      await axios.delete(
+      await api.delete(
         `${SALES_URL}/${sale.id}`,
         authConfig
       );
@@ -363,7 +357,7 @@ export default function Sales() {
             <small>Revenue from all sales</small>
           </div>
         </div>
-
+F
         <div className="module-stat-card">
           <div className="stat-icon">📦</div>
 

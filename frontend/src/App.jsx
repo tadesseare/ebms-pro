@@ -13,6 +13,7 @@ import Purchases from "./pages/Purchase";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 
+
 export default function App() {
   return (
     <Routes>

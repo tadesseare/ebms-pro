@@ -1,7 +1,7 @@
 
 
- import { useEffect, useMemo, useState } from "react";
-import axios from "axios";
+import { useEffect, useMemo, useState } from "react";
+import api from "../api/api";
 import Modal from "../components/Modal";
 import "../styles/ModulePage.css";
 
@@ -25,16 +25,13 @@ const emptyForm = {
   const [error, setError] = useState("");
 
   const requestConfig = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
+     };
   const fetchCustomers = async () => {
     try {
       setLoading(true);
       setError("");
 
-      const response = await axios.get("/api/customers", requestConfig
+      const response = await api.get("/api/customers", requestConfig
     );
 
       setCustomers(
@@ -119,13 +116,13 @@ useEffect(() => {
       setError("");
 
       if (editingId) {
-        await axios.put(
+        await api.put(
           `/api/customers/${editingId}`,
           payload,
           requestConfig
         );
       } else {
-        await axios.post("/api/customers", payload, requestConfig
+        await api.post("/api/customers", payload, requestConfig
       );
       }
 
@@ -155,7 +152,7 @@ useEffect(() => {
     try {
       setError("");
 
-      await axios.delete(
+      await api.delete(
         `/api/customers/${customer.id}`,
         requestConfig
       );

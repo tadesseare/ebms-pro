@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api/api";
 import { useAuth } from "../context/AuthContext";
 import "./Dashboard.css";
 import {
@@ -32,10 +32,8 @@ export default function Dashboard() {
 
         setError("");
 
-        const response = await axios.get("/api/dashboard/stats", {
-          headers: {
-            Authorization: "Bearer " + token,
-          },
+        const response = await api.get("/api/dashboard/stats", {
+         
         });
 
         setData(response.data);
