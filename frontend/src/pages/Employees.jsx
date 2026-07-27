@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import api from "../api/api";
 import Modal from "../components/Modal";
+import { useAuth } from "../context/AuthContext";
 import {
   PieChart,
   Pie,
@@ -30,6 +31,12 @@ const emptyForm = {
 };
 
 export default function Employees() {
+  const { user } = useAuth();
+
+const canEdit =
+  user?.role === "admin" || user?.role === "manager";
+
+const canDelete = user?.role === "admin";
  const [employees, setEmployees] = useState([]);
  const [loading, setLoading] = useState(true);
  const [error, setError] = useState("");
@@ -337,6 +344,7 @@ if (error) {
     </main>
   );
 }
+
 const DEPARTMENT_COLORS = {
   Operations: "#2563eb",               // Blue
   Administration: "#22c55e",           // Green
@@ -787,21 +795,23 @@ const DEPARTMENT_COLORS = {
                         View
                       </button>
 
-                      <button
-                        type="button"
-                        className="edit-button"
-                        onClick={() => openEditForm(employee)}
-                      >
-                        Edit
-                      </button>
+                      {canEdit && (
+  <button
+    type="button"
+    onClick={() => startEdit(employee)}
+  >
+    Edit
+  </button>
+)}
 
-                      <button
-                        type="button"
-                        className="delete-button"
-                        onClick={() => handleDelete(employee.id)}
-                      >
-                        Delete
-                      </button>
+{canDelete && (
+  <button
+    type="button"
+    onClick={() => handleDelete(employee.id)}
+  >
+    Delete
+  </button>
+)}
                     </div>
                   </td>
                 </tr>
