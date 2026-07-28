@@ -1434,3 +1434,17 @@
 .delete-action:hover {
   background: #fecaca;
 }
+.table-toolbar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .table-toolbar-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

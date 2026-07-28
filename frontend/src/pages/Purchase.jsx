@@ -5,8 +5,8 @@ import {
 } from "react";
 import api from "../api/api";
 import Modal from "../components/Modal";
+import { useAuth } from "../context/AuthContext";
 import "../styles/ModulePage.css";
-
 const PURCHASES_URL = "/purchases";
 const PRODUCTS_URL = "/products";
 const SUPPLIERS_URL = "/suppliers";
@@ -20,7 +20,14 @@ const emptyForm = {
 };
 const PURCHASES_PER_PAGE = 20;
 export default function Purchases() {
-  const token = localStorage.getItem("token");
+const { token, user } = useAuth();
+
+const role = String(user?.role || "")
+  .trim()
+  .toLowerCase();
+
+const canCreate = role === "admin" || role === "manager";
+const canDelete = role === "admin";
 
   const [purchases, setPurchases] = useState([]);
   const [products, setProducts] = useState([]);
@@ -491,17 +498,26 @@ useEffect(() => {
             }
           />
 
-          <button
-            type="button"
-            className="primary-button"
-            onClick={openPurchaseModal}
-            disabled={
-              products.length === 0 ||
-              suppliers.length === 0
-            }
-          >
-            + New Purchase
-          </button>
+          {canCreate && (
+  <button
+    type="button"
+    className="primary-button"
+    onClick={openPurchaseModal}
+    disabled={
+      products.length === 0 ||
+      suppliers.length === 0
+    }
+    title={
+      products.length === 0
+        ? "Create a product first."
+        : suppliers.length === 0
+          ? "Create a supplier first."
+          : "Record a new purchase"
+    }
+  >
+    + New Purchase
+  </button>
+)}
         </div>
 
         <div className="module-table-wrapper">
@@ -582,31 +598,29 @@ useEffect(() => {
                         </td>
 
                         <td>
-                          <div className="module-actions">
-                            <button
-                              type="button"
-                              className="view-button"
-                              onClick={() =>
-                                setSelectedPurchase(
-                                  purchase
-                                )
-                              }
-                            >
-                              View
-                            </button>
+                          <div className="module-actions action-buttons">
+  <button
+    type="button"
+    className="action-icon-button view-action"
+    onClick={() => setSelectedPurchase(purchase)}
+    title="View purchase"
+    aria-label={`View purchase ${purchase.id}`}
+  >
+    👁
+  </button>
 
-                            <button
-                              type="button"
-                              className="delete-button"
-                              onClick={() =>
-                                handleDelete(
-                                  purchase
-                                )
-                              }
-                            >
-                              Delete
-                            </button>
-                          </div>
+  {canDelete && (
+    <button
+      type="button"
+      className="action-icon-button delete-action"
+      onClick={() => handleDelete(purchase)}
+      title="Delete purchase"
+      aria-label={`Delete purchase ${purchase.id}`}
+    >
+      🗑️
+    </button>
+  )}
+</div>
                         </td>
                       </tr>
                     );

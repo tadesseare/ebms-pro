@@ -22,14 +22,28 @@ export const getEmployees = async (req, res) => {
  */
 export const createEmployee = async (req, res) => {
   try {
-    const { name, email, phone, position, salary } = req.body;
+   const {
+  name,
+  email,
+  phone,
+  position,
+  salary,
+  status = "Active",
+} = req.body;
 
     if (!name) {
       return res.status(400).json({ message: "Name is required" });
     }
 
     const newEmployee = await prisma.employee.create({
-      data: { name, email, phone, position, salary }
+      data: {
+  name,
+  email,
+  phone,
+  position,
+  salary: Number(salary),
+  status,
+}
     });
 
     res.json(newEmployee);
@@ -45,17 +59,35 @@ export const createEmployee = async (req, res) => {
 export const updateEmployee = async (req, res) => {
   try {
     const id = Number(req.params.id);
-    const { name, email, phone, position, salary } = req.body;
+
+    const {
+      name,
+      email,
+      phone,
+      position,
+      salary,
+      status,
+    } = req.body;
 
     const updated = await prisma.employee.update({
       where: { id },
-      data: { name, email, phone, position, salary }
+      data: {
+        name,
+        email,
+        phone,
+        position,
+        salary: Number(salary),
+        status,
+      },
     });
 
     res.json(updated);
   } catch (error) {
     console.error("UPDATE EMPLOYEE ERROR:", error);
-    res.status(500).json({ message: error.message });
+
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
 

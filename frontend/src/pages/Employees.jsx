@@ -81,7 +81,9 @@ useEffect(() => {
     const inactiveEmployees = employees.filter(
       (employee) => employee.status === "Inactive"
     ).length;
-
+const onLeaveEmployees = employees.filter(
+  (employee) => employee.status === "On Leave"
+).length;
     const totalPayroll = employees.reduce(
       (total, employee) => total + Number(employee.salary || 0),
       0
@@ -90,29 +92,35 @@ useEffect(() => {
     const averageSalary =
       totalEmployees > 0 ? totalPayroll / totalEmployees : 0;
 
-    return {
-      totalEmployees,
-      activeEmployees,
-      inactiveEmployees,
-      totalPayroll,
-      averageSalary,
-    };
+   return {
+  totalEmployees,
+  activeEmployees,
+  inactiveEmployees,
+  onLeaveEmployees,
+  totalPayroll,
+  averageSalary,
+};
   }, [employees]);
 
 const STATUS_COLORS = [
-  "#22c55e", // Active (green)
-  "#ef4444", // Inactive (red)
+  "#22c55e", // Active
+  "#ef4444", // Inactive
+  "#f59e0b", // On Leave
 ];
-  const employeeStatusData = [
-    {
-      name: "Active",
-      value: employeeMetrics.activeEmployees,
-    },
-    {
-      name: "Inactive",
-      value: employeeMetrics.inactiveEmployees,
-    },
-  ];
+ const employeeStatusData = [
+  {
+    name: "Active",
+    value: employeeMetrics.activeEmployees,
+  },
+  {
+    name: "Inactive",
+    value: employeeMetrics.inactiveEmployees,
+  },
+  {
+    name: "On Leave",
+    value: employeeMetrics.onLeaveEmployees,
+  },
+];
 const departmentChartData = useMemo(() => {
   const getDepartment = (position = "") => {
   const value = position.toLowerCase();
@@ -375,15 +383,6 @@ const DEPARTMENT_COLORS = {
       </div>
     </div>
 
-    {canEdit && (
-  <button
-    type="button"
-    className="primary-button"
-    onClick={openAddForm}
-  >
-    + Add Employee
-  </button>
-)}
 
   </div>
 
@@ -618,13 +617,14 @@ const DEPARTMENT_COLORS = {
             />
 
             <select
-              name="status"
-              value={form.status}
-              onChange={handleChange}
-            >
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-            </select>
+  name="status"
+  value={form.status}
+  onChange={handleChange}
+>
+  <option value="Active">Active</option>
+  <option value="Inactive">Inactive</option>
+  <option value="On Leave">On Leave</option>
+</select>
           </div>
 
           <button type="submit" className="primary-button">
@@ -745,7 +745,19 @@ const DEPARTMENT_COLORS = {
             onChange={(event) => setSearch(event.target.value)}
           />
 
-          <span>{filteredEmployees.length} records</span>
+         <div className="table-toolbar-actions">
+  <span>{filteredEmployees.length} records</span>
+
+  {canEdit && (
+    <button
+      type="button"
+      className="primary-button"
+      onClick={openAddForm}
+    >
+      + Add Employee
+    </button>
+  )}
+</div>
         </div>
 
         {filteredEmployees.length === 0 ? (

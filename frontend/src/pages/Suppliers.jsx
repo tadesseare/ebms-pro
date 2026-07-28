@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import api from "../api/api";
 import Modal from "../components/Modal";
 import "../styles/ModulePage.css";
+import { useAuth } from "../context/AuthContext";
 
 const emptyForm = {
   name: "",
@@ -10,7 +11,14 @@ const emptyForm = {
 };
 
 export default function Suppliers() {
-  const token = localStorage.getItem("token");
+ const { token, user } = useAuth();
+
+const role = String(user?.role || "")
+  .trim()
+  .toLowerCase();
+
+const canEdit = role === "admin" || role === "manager";
+const canDelete = role === "admin";
 
   const [suppliers, setSuppliers] = useState([]);
   const [form, setForm] = useState(emptyForm);
@@ -214,13 +222,7 @@ export default function Suppliers() {
           </div>
         </div>
 
-        <button
-          type="button"
-          className="primary-button"
-          onClick={openAddForm}
-        >
-          + Add Supplier
-        </button>
+  
       </div>
 
       {error && (
@@ -284,12 +286,22 @@ export default function Suppliers() {
             onChange={(event) => setSearchTerm(event.target.value)}
           />
 
-          <span>
-            {filteredSuppliers.length}{" "}
-            {filteredSuppliers.length === 1
-              ? "record"
-              : "records"}
-          </span>
+         <div className="table-toolbar-actions">
+  <span>
+    {filteredSuppliers.length}{" "}
+    {filteredSuppliers.length === 1 ? "record" : "records"}
+  </span>
+
+  {canEdit && (
+    <button
+      type="button"
+      className="primary-button"
+      onClick={openAddForm}
+    >
+      + Add Supplier
+    </button>
+  )}
+</div>
         </div>
 
         {loading ? (
@@ -338,33 +350,41 @@ export default function Suppliers() {
                     </td>
 
                     <td>
-                      <div className="module-actions">
-                        <button
-                          type="button"
-                          className="view-button"
-                          onClick={() =>
-                            setSelectedSupplier(supplier)
-                          }
-                        >
-                          View
-                        </button>
+                   <div className="module-actions action-buttons">
+  <button
+    type="button"
+    className="action-icon-button view-action"
+    onClick={() => setSelectedSupplier(supplier)}
+    title="View supplier"
+    aria-label={`View ${supplier.name}`}
+  >
+    👁
+  </button>
 
-                        <button
-                          type="button"
-                          className="edit-button"
-                          onClick={() => openEditForm(supplier)}
-                        >
-                          Edit
-                        </button>
+  {canEdit && (
+    <button
+      type="button"
+      className="action-icon-button edit-action"
+      onClick={() => openEditForm(supplier)}
+      title="Edit supplier"
+      aria-label={`Edit ${supplier.name}`}
+    >
+      ✏️
+    </button>
+  )}
 
-                        <button
-                          type="button"
-                          className="delete-button"
-                          onClick={() => handleDelete(supplier)}
-                        >
-                          Delete
-                        </button>
-                      </div>
+  {canDelete && (
+    <button
+      type="button"
+      className="action-icon-button delete-action"
+      onClick={() => handleDelete(supplier)}
+      title="Delete supplier"
+      aria-label={`Delete ${supplier.name}`}
+    >
+      🗑️
+    </button>
+  )}
+</div>
                     </td>
                   </tr>
                 ))}
@@ -469,21 +489,7 @@ export default function Suppliers() {
               Close
             </button>
 
-            <button
-              type="button"
-              className="primary-button"
-              onClick={() => {
-                const supplier = selectedSupplier;
-
-                setSelectedSupplier(null);
-
-                if (supplier) {
-                  openEditForm(supplier);
-                }
-              }}
-            >
-              Edit Supplier
-            </button>
+            primary-button
           </>
         }
       >

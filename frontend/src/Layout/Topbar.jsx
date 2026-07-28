@@ -1,10 +1,30 @@
+import { useAuth } from "../context/AuthContext";
+
 export default function Topbar({ collapsed, onToggleSidebar }) {
+  const { user } = useAuth();
+
   const currentDate = new Date().toLocaleDateString("en-US", {
     weekday: "short",
     month: "short",
     day: "numeric",
     year: "numeric",
   });
+
+  const userName = user?.name?.trim() || "User";
+
+  const userRole = String(user?.role || "staff")
+    .trim()
+    .toLowerCase();
+
+  const formattedRole =
+    userRole.charAt(0).toUpperCase() + userRole.slice(1);
+
+  const userInitials = userName
+    .split(/\s+/)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
     <header className="topbar">
@@ -47,11 +67,11 @@ export default function Topbar({ collapsed, onToggleSidebar }) {
         <div className="topbar-date">{currentDate}</div>
 
         <div className="user-profile">
-          <div className="user-avatar">A</div>
+          <div className="user-avatar">{userInitials}</div>
 
           <div className="user-details">
-            <strong>Administrator</strong>
-            <span>Admin</span>
+            <strong>{userName}</strong>
+            <span>{formattedRole}</span>
           </div>
         </div>
       </div>

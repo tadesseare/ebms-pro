@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import api from "../api/api";
 import Modal from "../components/Modal";
 import "../styles/ModulePage.css";
+import { useAuth } from "../context/AuthContext";
 
 const emptyForm = {
   name: "",
@@ -10,7 +11,14 @@ const emptyForm = {
 };
 
 export default function Customers() {
-  const token = localStorage.getItem("token");
+ const { token, user } = useAuth();
+
+const role = String(user?.role || "")
+  .trim()
+  .toLowerCase();
+
+const canEdit = role === "admin" || role === "manager";
+const canDelete = role === "admin";
 
   const [customers, setCustomers] = useState([]);
   const [form, setForm] = useState(emptyForm);
@@ -197,13 +205,7 @@ export default function Customers() {
           </div>
         </div>
 
-        <button
-          type="button"
-          className="primary-button"
-          onClick={openAddForm}
-        >
-          + Add Customer
-        </button>
+        
       </div>
 
       {error && (
@@ -267,10 +269,23 @@ export default function Customers() {
             onChange={(event) => setSearchTerm(event.target.value)}
           />
 
-          <span>
-            {filteredCustomers.length}{" "}
-            {filteredCustomers.length === 1 ? "record" : "records"}
-          </span>
+         
+  <div className="table-toolbar-actions">
+  <span>
+    {filteredCustomers.length}{" "}
+    {filteredCustomers.length === 1 ? "record" : "records"}
+  </span>
+
+  {canEdit && (
+    <button
+      type="button"
+      className="primary-button"
+      onClick={openAddForm}
+    >
+      + Add Customer
+    </button>
+  )}
+</div>
         </div>
 
         {loading ? (
@@ -319,33 +334,41 @@ export default function Customers() {
                     </td>
 
                     <td>
-                      <div className="module-actions">
-                        <button
-                          type="button"
-                          className="view-button"
-                          onClick={() =>
-                            setSelectedCustomer(customer)
-                          }
-                        >
-                          View
-                        </button>
+                 <div className="module-actions action-buttons">
+  <button
+    type="button"
+    className="action-icon-button view-action"
+    onClick={() => setSelectedCustomer(customer)}
+    title="View customer"
+    aria-label={`View ${customer.name}`}
+  >
+    👁
+  </button>
 
-                        <button
-                          type="button"
-                          className="edit-button"
-                          onClick={() => openEditForm(customer)}
-                        >
-                          Edit
-                        </button>
+  {canEdit && (
+    <button
+      type="button"
+      className="action-icon-button edit-action"
+      onClick={() => openEditForm(customer)}
+      title="Edit customer"
+      aria-label={`Edit ${customer.name}`}
+    >
+      ✏️
+    </button>
+  )}
 
-                        <button
-                          type="button"
-                          className="delete-button"
-                          onClick={() => handleDelete(customer)}
-                        >
-                          Delete
-                        </button>
-                      </div>
+  {canDelete && (
+    <button
+      type="button"
+      className="action-icon-button delete-action"
+      onClick={() => handleDelete(customer)}
+      title="Delete customer"
+      aria-label={`Delete ${customer.name}`}
+    >
+      🗑️
+    </button>
+  )}
+</div>
                     </td>
                   </tr>
                 ))}
@@ -446,21 +469,23 @@ export default function Customers() {
               Close
             </button>
 
-            <button
-              type="button"
-              className="primary-button"
-              onClick={() => {
-                const customer = selectedCustomer;
+            {canEdit && (
+  <button
+    type="button"
+    className="primary-button"
+    onClick={() => {
+      const customer = selectedCustomer;
 
-                setSelectedCustomer(null);
+      setSelectedCustomer(null);
 
-                if (customer) {
-                  openEditForm(customer);
-                }
-              }}
-            >
-              Edit Customer
-            </button>
+      if (customer) {
+        openEditForm(customer);
+      }
+    }}
+  >
+    Edit Customer
+  </button>
+)}
           </>
         }
       >

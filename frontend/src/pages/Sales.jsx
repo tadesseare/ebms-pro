@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import api from "../api/api";
 import Modal from "../components/Modal";
+import { useAuth } from "../context/AuthContext";
 import "../styles/ModulePage.css";
 
 const SALES_URL = "/sales";
@@ -14,7 +15,14 @@ const emptyForm = {
 };
 const SALES_PER_PAGE = 20;
 export default function Sales() {
-  const token = localStorage.getItem("token");
+ const { token, user } = useAuth();
+
+const role = String(user?.role || "")
+  .trim()
+  .toLowerCase();
+
+const canCreate = role === "admin" || role === "manager";
+const canDelete = role === "admin";
   const authConfig = {};
   const [sales, setSales] = useState([]);
   const [products, setProducts] = useState([]);
@@ -431,24 +439,26 @@ useEffect(() => {
             }
           />
 
-          <button
-            type="button"
-            className="primary-button"
-            onClick={openSaleModal}
-            disabled={
-              sellableProducts.length === 0 ||
-              customers.length === 0
-            }
-            title={
-              sellableProducts.length === 0
-                ? "No products currently have available stock."
-                : customers.length === 0
-                  ? "Create a customer first."
-                  : "Create a new sale"
-            }
-          >
-            + New Sale
-          </button>
+          {canCreate && (
+  <button
+    type="button"
+    className="primary-button"
+    onClick={openSaleModal}
+    disabled={
+      sellableProducts.length === 0 ||
+      customers.length === 0
+    }
+    title={
+      sellableProducts.length === 0
+        ? "No products currently have available stock."
+        : customers.length === 0
+          ? "Create a customer first."
+          : "Create a new sale"
+    }
+  >
+    + New Sale
+  </button>
+)}
         </div>
 
         <div className="module-table-wrapper">
@@ -518,27 +528,30 @@ useEffect(() => {
                       </td>
 
                       <td>
-                        <div className="module-actions">
-                          <button
-                            type="button"
-                            className="view-button"
-                            onClick={() =>
-                              setSelectedSale(sale)
-                            }
-                          >
-                            View
-                          </button>
+                        <div className="module-actions action-buttons">
+  <button
+    type="button"
+    className="action-icon-button view-action"
+    onClick={() => setSelectedSale(sale)}
+    title="View sale"
+    aria-label={`View sale ${sale.id}`}
+  >
+    👁
+  </button>
 
-                          <button
-                            type="button"
-                            className="delete-button"
-                            onClick={() =>
-                              handleDelete(sale)
-                            }
-                          >
-                            Delete
-                          </button>
-                        </div>
+  {canDelete && (
+    <button
+      type="button"
+      className="action-icon-button delete-action"
+      onClick={() => handleDelete(sale)}
+      title="Delete sale"
+      aria-label={`Delete sale ${sale.id}`}
+    >
+      🗑️
+    </button>
+  )}
+</div>
+                        
                       </td>
                     </tr>
                   );

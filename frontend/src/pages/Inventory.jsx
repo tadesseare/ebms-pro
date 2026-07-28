@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api/api";
-
 import Modal from "../components/Modal";
+import { useAuth } from "../context/AuthContext";
 import "../styles/ModulePage.css";
 import "./Inventory.css";
 
@@ -30,7 +30,14 @@ export default function Inventory() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const token = localStorage.getItem("token");
+ const { user } = useAuth();
+
+const role = String(user?.role || "")
+  .trim()
+  .toLowerCase();
+
+const canEdit = role === "admin" || role === "manager";
+const canDelete = role === "admin";
 
   const authConfig = {
    
@@ -332,13 +339,7 @@ const inventoryValue = inventory.reduce(
           ↻ {loading ? "Refreshing..." : "Refresh"}
         </button>
 
-        <button
-          type="button"
-          className="inventory-add-button"
-          onClick={openAddModal}
-        >
-          + Add Inventory
-        </button>
+ 
       </div>
     </section>
 
@@ -428,10 +429,22 @@ const inventoryValue = inventory.reduce(
             </select>
           </div>
 
-        <span>
-  {filteredInventory.length}{" "}
-  {filteredInventory.length === 1 ? "record" : "records"}
-</span>
+        <div className="table-toolbar-actions">
+  <span>
+    {filteredInventory.length}{" "}
+    {filteredInventory.length === 1 ? "record" : "records"}
+  </span>
+
+  {canEdit && (
+    <button
+      type="button"
+      className="inventory-add-button"
+      onClick={openAddModal}
+    >
+      + Add Inventory
+    </button>
+  )}
+</div>
         </div>
 
         <div className="module-table-wrapper">
@@ -491,33 +504,47 @@ const inventoryValue = inventory.reduce(
                       </td>
 
                       <td>
-                        <div className="module-actions">
-                          <button
-                            type="button"
-                            className="view-button"
-                            onClick={() =>
-                              setSelectedItem(item)
-                            }
-                          >
-                            View
-                          </button>
+                        <div className="module-actions action-buttons">
+  <button
+    type="button"
+    className="action-icon-button view-action"
+    onClick={() => setSelectedItem(item)}
+    title="View inventory"
+    aria-label={`View inventory for ${
+      item.product?.name || "product"
+    }`}
+  >
+    👁
+  </button>
 
-                          <button
-                            type="button"
-                            className="edit-button"
-                            onClick={() => startEdit(item)}
-                          >
-                            Edit
-                          </button>
+  {canEdit && (
+    <button
+      type="button"
+      className="action-icon-button edit-action"
+      onClick={() => startEdit(item)}
+      title="Edit inventory"
+      aria-label={`Edit inventory for ${
+        item.product?.name || "product"
+      }`}
+    >
+      ✏️
+    </button>
+  )}
 
-                          <button
-                            type="button"
-                            className="delete-button"
-                            onClick={() => handleDelete(item)}
-                          >
-                            Delete
-                          </button>
-                        </div>
+  {canDelete && (
+    <button
+      type="button"
+      className="action-icon-button delete-action"
+      onClick={() => handleDelete(item)}
+      title="Delete inventory"
+      aria-label={`Delete inventory for ${
+        item.product?.name || "product"
+      }`}
+    >
+      🗑️
+    </button>
+  )}
+</div>
                       </td>
                     </tr>
                   );

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import api from "../api/api";
 import Modal from "../components/Modal";
+import { useAuth } from "../context/AuthContext";
 import "../styles/ModulePage.css";
-
 
 const API_URL = "/products";
 const SUPPLIERS_URL = "/suppliers";
@@ -26,7 +26,14 @@ export default function Products() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const token = localStorage.getItem("token");
+const { user } = useAuth();
+
+const role = String(user?.role || "")
+  .trim()
+  .toLowerCase();
+
+const canEdit = role === "admin" || role === "manager";
+const canDelete = role === "admin";
 
   const authConfig = {
    
@@ -247,13 +254,7 @@ export default function Products() {
     </div>
   </div>
 
-  <button
-    type="button"
-    className="primary-button"
-    onClick={openAddModal}
-  >
-    + Add Product
-  </button>
+ 
 </div>
 
       <div className="module-stat-grid">
@@ -309,10 +310,22 @@ export default function Products() {
             onChange={(event) => setSearchTerm(event.target.value)}
           />
 
-         <span>
-  {filteredProducts.length}{" "}
-  {filteredProducts.length === 1 ? "record" : "records"}
-</span>
+  <div className="table-toolbar-actions">
+  <span>
+    {filteredProducts.length}{" "}
+    {filteredProducts.length === 1 ? "record" : "records"}
+  </span>
+
+  {canEdit && (
+    <button
+      type="button"
+      className="primary-button"
+      onClick={openAddModal}
+    >
+      + Add Product
+    </button>
+  )}
+</div>
         </div>
 
         <div className="module-table-wrapper">
@@ -352,33 +365,42 @@ export default function Products() {
                     <td>{product.supplier?.name || "—"}</td>
 
                     <td>
-                      <div className="module-actions">
-                        <button
-                          type="button"
-                          className="view-button"
-                          onClick={() =>
-                            setSelectedProduct(product)
-                          }
-                        >
-                          View
-                        </button>
+                      <div className="module-actions action-buttons">
+  <button
+    type="button"
+    className="action-icon-button view-action"
+    onClick={() => setSelectedProduct(product)}
+    title="View product"
+    aria-label={`View ${product.name}`}
+  >
+    👁
+  </button>
 
-                        <button
-                          type="button"
-                          className="edit-button"
-                          onClick={() => startEdit(product)}
-                        >
-                          Edit
-                        </button>
+  {canEdit && (
+    <button
+      type="button"
+      className="action-icon-button edit-action"
+      onClick={() => startEdit(product)}
+      title="Edit product"
+      aria-label={`Edit ${product.name}`}
+    >
+      ✏️
+    </button>
+  )}
 
-                        <button
-                          type="button"
-                          className="delete-button"
-                          onClick={() => handleDelete(product)}
-                        >
-                          Delete
-                        </button>
-                      </div>
+  {canDelete && (
+    <button
+      type="button"
+      className="action-icon-button delete-action"
+      onClick={() => handleDelete(product)}
+      title="Delete product"
+      aria-label={`Delete ${product.name}`}
+    >
+      🗑️
+    </button>
+  )}
+</div>
+                      
                     </td>
                   </tr>
                 ))}
