@@ -31,12 +31,14 @@ const emptyForm = {
 };
 
 export default function Employees() {
-  const { user } = useAuth();
+const { user } = useAuth();
 
-const canEdit =
-  user?.role === "admin" || user?.role === "manager";
+const role = String(user?.role || "")
+  .trim()
+  .toLowerCase();
 
-const canDelete = user?.role === "admin";
+const canEdit = role === "admin" || role === "manager";
+const canDelete = role === "admin";
  const [employees, setEmployees] = useState([]);
  const [loading, setLoading] = useState(true);
  const [error, setError] = useState("");
@@ -373,13 +375,15 @@ const DEPARTMENT_COLORS = {
       </div>
     </div>
 
-    <button
-      type="button"
-      className="primary-button"
-      onClick={openAddForm}
-    >
-      + Add Employee
-    </button>
+    {canEdit && (
+  <button
+    type="button"
+    className="primary-button"
+    onClick={openAddForm}
+  >
+    + Add Employee
+  </button>
+)}
 
   </div>
 
@@ -786,33 +790,42 @@ const DEPARTMENT_COLORS = {
                   </td>
 
                   <td>
-                    <div className="action-buttons">
-                      <button
-                        type="button"
-                        className="view-button"
-                        onClick={() => handleView(employee)}
-                      >
-                        View
-                      </button>
-
-                      {canEdit && (
+    <div className="action-buttons">
   <button
     type="button"
-    onClick={() => startEdit(employee)}
+    className="action-icon-button view-action"
+    onClick={() => handleView(employee)}
+    title="View employee"
+    aria-label={`View ${employee.name}`}
   >
-    Edit
+    👁
   </button>
-)}
 
-{canDelete && (
-  <button
-    type="button"
-    onClick={() => handleDelete(employee.id)}
-  >
-    Delete
-  </button>
-)}
-                    </div>
+  {canEdit && (
+    <button
+      type="button"
+      className="action-icon-button edit-action"
+      onClick={() => openEditForm(employee)}
+      title="Edit employee"
+      aria-label={`Edit ${employee.name}`}
+    >
+      ✏️
+    </button>
+  )}
+
+  {canDelete && (
+    <button
+      type="button"
+      className="action-icon-button delete-action"
+      onClick={() => handleDelete(employee.id)}
+      title="Delete employee"
+      aria-label={`Delete ${employee.name}`}
+    >
+      🗑️
+    </button>
+  )}
+</div>
+                    
                   </td>
                 </tr>
               ))}
