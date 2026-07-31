@@ -397,12 +397,13 @@ body {
     transition:
       width 0.25s ease,
       transform 0.25s ease;
-  } /* This closing brace was missing */
+  }
 
   .sidebar.sidebar-mobile-open {
     transform: translateX(0);
   }
 
+  /* Compact mobile sidebar */
   .sidebar-brand {
     min-height: 82px;
     padding: 14px 20px;
@@ -425,14 +426,7 @@ body {
     min-height: 44px;
   }
 
-  /* Keep the remainder of your existing mobile rules here */
-}
-
-  .sidebar.sidebar-mobile-open {
-    transform: translateX(0);
-  }
-
-  /* Restore labels when the drawer opens */
+  /* Restore labels when drawer opens */
   .sidebar .brand-text {
     display: block;
   }
@@ -445,22 +439,20 @@ body {
     display: inline;
   }
 
-  /* Main content uses the complete screen */
+  /* Main content uses full screen on mobile */
   .app-main,
   .app-main-sidebar-collapsed {
     margin-left: 0;
   }
 
-  /* Dark background behind open drawer */
+  /* Dark overlay behind drawer */
   .sidebar-overlay {
     position: fixed;
     inset: 0;
     z-index: 1050;
-
     display: block;
     padding: 0;
     border: 0;
-
     background: rgb(15 23 42 / 55%);
     cursor: pointer;
     backdrop-filter: blur(2px);
@@ -491,6 +483,7 @@ body {
     width: 40px;
     height: 40px;
   }
+}
 
 
 @media (max-width: 420px) {
