@@ -13,12 +13,18 @@ const menuItems = [
   { path: "/settings", label: "Settings", icon: "⚙️" },
 ];
 
-export default function Sidebar({ collapsed }) {
+export default function Sidebar({
+  collapsed,
+  mobileOpen,
+  onNavigate,
+}) {
   const navigate = useNavigate();
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+
+    onNavigate?.();
 
     navigate("/login", {
       replace: true,
@@ -26,7 +32,11 @@ export default function Sidebar({ collapsed }) {
   };
 
   return (
-    <aside className={`sidebar ${collapsed ? "sidebar-collapsed" : ""}`}>
+    <aside
+      className={`sidebar ${
+        collapsed ? "sidebar-collapsed" : ""
+      } ${mobileOpen ? "sidebar-mobile-open" : ""}`}
+    >
       <div className="sidebar-brand">
         <div className="brand-logo">E</div>
 
@@ -44,15 +54,20 @@ export default function Sidebar({ collapsed }) {
             key={item.path}
             to={item.path}
             end={item.end}
+            onClick={onNavigate}
             className={({ isActive }) =>
-              `sidebar-link ${isActive ? "sidebar-link-active" : ""}`
+              `sidebar-link ${
+                isActive ? "sidebar-link-active" : ""
+              }`
             }
             title={collapsed ? item.label : ""}
           >
             <span className="sidebar-icon">{item.icon}</span>
 
             {!collapsed && (
-              <span className="sidebar-label">{item.label}</span>
+              <span className="sidebar-label">
+                {item.label}
+              </span>
             )}
           </NavLink>
         ))}

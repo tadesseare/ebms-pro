@@ -360,6 +360,10 @@ body {
 
 /* Responsive */
 
+.sidebar-overlay {
+  display: none;
+}
+
 @media (max-width: 1100px) {
   .topbar-date,
   .database-status,
@@ -373,60 +377,87 @@ body {
 }
 
 @media (max-width: 760px) {
+  /* Sidebar becomes an off-screen drawer */
   .sidebar {
-    width: 88px;
+    z-index: 1100;
+    width: min(270px, 82vw);
+    transform: translateX(-100%);
+    transition:
+      width 0.25s ease,
+      transform 0.25s ease;
   }
 
-  .brand-text,
-  .sidebar-label,
-  .logout-button span:not(.sidebar-icon) {
-    display: none;
+  .sidebar.sidebar-mobile-open {
+    transform: translateX(0);
   }
 
+  /* Restore labels when the drawer opens */
+  .sidebar .brand-text {
+    display: block;
+  }
+
+  .sidebar .sidebar-label {
+    display: inline;
+  }
+
+  .sidebar .logout-button span:not(.sidebar-icon) {
+    display: inline;
+  }
+
+  /* Main content uses the complete screen */
   .app-main,
   .app-main-sidebar-collapsed {
-    margin-left: 88px;
+    margin-left: 0;
+  }
+
+  /* Dark background behind open drawer */
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1050;
+
+    display: block;
+    padding: 0;
+    border: 0;
+
+    background: rgb(15 23 42 / 55%);
+    cursor: pointer;
+    backdrop-filter: blur(2px);
   }
 
   .app-content {
-    padding: 18px;
+    min-height: calc(100vh - 68px);
+    padding: 16px;
   }
 
   .topbar {
-    padding: 12px 16px;
+    min-height: 68px;
+    gap: 10px;
+    padding: 10px 14px;
   }
 
-  .topbar-search {
-    width: 180px;
-    min-width: 0;
+  .topbar-left,
+  .topbar-right {
+    gap: 10px;
   }
 
+  .topbar-search,
   .notification-button {
     display: none;
   }
+
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+  }
 }
 
-@media (max-width: 520px) {
-  .sidebar {
-    width: 70px;
-  }
-
-  .sidebar-brand {
+@media (max-width: 420px) {
+  .app-content {
     padding: 12px;
   }
 
-  .brand-logo {
-    width: 42px;
-    min-width: 42px;
-    height: 42px;
-  }
-
-  .app-main,
-  .app-main-sidebar-collapsed {
-    margin-left: 70px;
-  }
-
-  .topbar-search {
-    display: none;
+  .topbar {
+    padding: 10px 12px;
   }
 }
