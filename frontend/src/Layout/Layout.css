@@ -53,14 +53,7 @@ body {
   box-shadow: 6px 0 20px rgb(15 23 42 / 10%);
   transition: width 0.25s ease;
 }
-.sidebar::-webkit-scrollbar{
-    width:6px;
-}
 
-.sidebar::-webkit-scrollbar-thumb{
-    background:#5b6ea6;
-    border-radius:10px;
-}
 
 .sidebar-collapsed {
   width: 88px;
@@ -108,10 +101,28 @@ body {
 .sidebar-nav {
   display: flex;
   flex: 1;
+  min-height: 0;
   flex-direction: column;
   gap: 6px;
+  overflow-x: hidden;
   overflow-y: auto;
-  padding: 18px 13px;
+  padding: 18px 13px 24px;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #5b6ea6 transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background: #5b6ea6;
 }
 
 .sidebar-link {
@@ -157,10 +168,11 @@ body {
 }
 
 .sidebar-footer {
+  flex-shrink: 0;
   padding: 14px;
   border-top: 1px solid rgb(255 255 255 / 12%);
+  background: #0a245f;
 }
-
 .logout-button {
   display: flex;
   width: 100%;
@@ -385,7 +397,36 @@ body {
     transition:
       width 0.25s ease,
       transform 0.25s ease;
+  } /* This closing brace was missing */
+
+  .sidebar.sidebar-mobile-open {
+    transform: translateX(0);
   }
+
+  .sidebar-brand {
+    min-height: 82px;
+    padding: 14px 20px;
+  }
+
+  .sidebar-nav {
+    gap: 2px;
+    padding: 10px 13px;
+  }
+
+  .sidebar-link {
+    min-height: 40px;
+  }
+
+  .sidebar-footer {
+    padding: 8px 14px;
+  }
+
+  .logout-button {
+    min-height: 44px;
+  }
+
+  /* Keep the remainder of your existing mobile rules here */
+}
 
   .sidebar.sidebar-mobile-open {
     transform: translateX(0);
@@ -450,7 +491,7 @@ body {
     width: 40px;
     height: 40px;
   }
-}
+
 
 @media (max-width: 420px) {
   .app-content {
